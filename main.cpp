@@ -2,14 +2,17 @@
 #include "maze_map.h"
 #include <string>
 #include <cmath>
+#include <deque>
 
 using namespace std;
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    std::cout << "Maze Solver Launch!!" << std::endl;
     const int real_node_num = 84;
     const double offset_x = 0.0-284.3;
     const double offset_y = 242.5-400.34;
-    Map maze(real_node_num);
+    const double scale = 0.1;
+    deque<Map> maze_deque;
+    Map maze_template(real_node_num);
 
     // 从文件中读取maze拓扑
     FILE *maze_topo = fopen("C:\\Users\\WJH\\CLionProjects\\iusc_maze\\maze_topo.csv", "r");
@@ -30,20 +33,24 @@ int main() {
         double x = 0.0, y = 0.0;
         int id = 0;
         fscanf(maze_topo,"%lf mm,%lf mm,%d,%*d", &x, &y, &id);
-        maze.node.at(id).x = x + offset_x;
-        maze.node.at(id).y = y + offset_y;
+        // 0.1为比例尺
+        maze_template.node.at(id).x = scale*(x + offset_x);
+        maze_template.node.at(id).y = scale*(y + offset_y);
     }
     int id1 = 0, id2 = 0;
     while(~fscanf(maze_topo,"%*lf mm,%*lf mm,\"%d,%d\",%*d", &id1, &id2))
     {
         // 求距离
-        double dx = maze.node.at(id1).x-maze.node.at(id2).x;
-        double dy = maze.node.at(id1).y-maze.node.at(id2).y;
+        double dx = maze_template.node.at(id1).x-maze_template.node.at(id2).x;
+        double dy = maze_template.node.at(id1).y-maze_template.node.at(id2).y;
         double dis = sqrt(dx*dx+dy*dy);
-        maze.add_edge(id1,id2,dis);
+        maze_template.add_edge(id1,id2,dis);
     }
     fclose(maze_topo);
 
+    // 读取可变的拓扑结构
+    maze_deque.emplace_back(maze_template);
+    auto maze = maze_deque.begin();
     char ju = '\0';
     id1 = 0; id2 = 0;
     // utf8文件开头有 \357\273\277
@@ -51,18 +58,26 @@ int main() {
     while(~fscanf(var,"\"%d,%d\"%c", &id1, &id2, &ju))
     {
         // 求距离
-        double dx = maze.node.at(id1).x-maze.node.at(id2).x;
-        double dy = maze.node.at(id1).y-maze.node.at(id2).y;
+        double dx = maze->node.at(id1).x-maze->node.at(id2).x;
+        double dy = maze->node.at(id1).y-maze->node.at(id2).y;
         double dis = sqrt(dx*dx+dy*dy);
-        maze.add_edge(id1,id2,dis);
-        if(ju != ',') break;
+        maze->add_edge(id1,id2,dis);
+        if(ju != ',')
+        {
+            maze_deque.emplace_back(maze_template);
+            maze = maze_deque.end()-1;
+        }
     }
     fclose(var);
+    maze_deque.pop_back();
 
     //
     vector<int> dst = {3,4,5};
-    maze.dijkstra(0, dst);
-    maze.dijkstra(1, dst);
-    maze.dijkstra(2, dst);
+    maze_deque.at(0).dijkstra(0, dst);
+    maze_deque.at(1).dijkstra(0, dst);
+    maze_deque.at(2).dijkstra(0, dst);
+    maze_deque.at(3).dijkstra(0, dst);
+    maze_deque.at(4).dijkstra(0, dst);
+    maze_deque.at(5).dijkstra(0, dst);
     return 0;
 }

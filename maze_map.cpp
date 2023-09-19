@@ -11,6 +11,8 @@ Map::Map(int _node_num) {
     }
 }
 
+// 复制构造函数
+
 int Map::get_node_num() {
     return node.size();
 }
@@ -134,6 +136,7 @@ void Map::dijkstra(const int &src_id, const vector<int> &dst_id) {
             }
         }
         cout << endl;
-        cout << "distance" << min_distance2node.at(dst) << endl;
+        cout << "distance = " << min_distance2node.at(dst) << "m" << endl;
     }
 }
+
