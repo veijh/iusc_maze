@@ -79,7 +79,7 @@ void Map::dijkstra(const int &src_id, const vector<int> &dst_id) {
     // 确定的最短路径长度
     vector<bool> path_find(node_num,false);
     // 上一节点
-    vector<int> path2node(node_num,0);
+    vector<int> path2node(node_num,-1);
 
     // 确定距离当前顶点最近的最短路径
     distance2node.at(src_id) = 0;
@@ -116,13 +116,22 @@ void Map::dijkstra(const int &src_id, const vector<int> &dst_id) {
     for(auto &dst:dst_id) // 路径表
     {
         int count = 0;
-        cout << "to node " << dst << ":";
+        cout << src_id << " to " << dst << ":";
         int id = dst;
+        // 这里可以补充判断id == src_id
         while(count < node_num && id!= src_id)
         {
             id = path2node.at(id);
-            cout << "<-" << id;
-            count++;
+            if(id == -1)
+            {
+                cout << "no path";
+                break;
+            }
+            else
+            {
+                cout << "<-" << id;
+                count++;
+            }
         }
         cout << endl;
     }
