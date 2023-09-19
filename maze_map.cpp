@@ -106,7 +106,7 @@ void Map::dijkstra(const int &src_id, const vector<int> &dst_id) {
             if(edge.distance + min_distance2node.at(min_id) < distance2node.at(edge.dst_id))
             {
                 path2node.at(edge.dst_id) = min_id;
-                distance2node.at(edge.dst_id) = edge.distance;
+                distance2node.at(edge.dst_id) = edge.distance + min_distance2node.at(min_id);
             }
         }
         // 不再考虑该节点
@@ -134,5 +134,6 @@ void Map::dijkstra(const int &src_id, const vector<int> &dst_id) {
             }
         }
         cout << endl;
+        cout << "distance" << min_distance2node.at(dst) << endl;
     }
 }
