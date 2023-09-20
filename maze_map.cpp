@@ -13,8 +13,6 @@ Map::Map(int _node_num) {
     }
 }
 
-// 复制构造函数
-
 int Map::get_node_num() {
     return node.size();
 }

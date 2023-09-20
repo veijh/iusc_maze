@@ -81,6 +81,17 @@ int main() {
 
     Drone drone;
     drone.plan(maze_vector, 0,dst);
-
+    for(auto &node:drone.merged_path)
+    {
+        cout << node;
+        if(&node != &drone.merged_path.back())
+        {
+            cout << "->";
+        }
+        else
+        {
+            cout << endl;
+        }
+    }
     return 0;
 }
