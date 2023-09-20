@@ -1,5 +1,6 @@
 #include <iostream>
 #include "maze_map.h"
+#include "drone.h"
 #include <string>
 #include <cmath>
 #include <deque>
@@ -11,7 +12,7 @@ int main() {
     const double offset_x = 0.0-284.3;
     const double offset_y = 242.5-400.34;
     const double scale = 0.1;
-    deque<Map> maze_deque;
+    vector<Map> maze_vector;
     Map maze_template(real_node_num);
 
     // 从文件中读取maze拓扑
@@ -49,8 +50,8 @@ int main() {
     fclose(maze_topo);
 
     // 读取可变的拓扑结构
-    maze_deque.emplace_back(maze_template);
-    auto maze = maze_deque.begin();
+    maze_vector.emplace_back(maze_template);
+    auto maze = maze_vector.begin();
     char ju = '\0';
     id1 = 0; id2 = 0;
     // utf8文件开头有 \357\273\277
@@ -64,20 +65,22 @@ int main() {
         maze->add_edge(id1,id2,dis);
         if(ju != ',')
         {
-            maze_deque.emplace_back(maze_template);
-            maze = maze_deque.end()-1;
+            maze_vector.emplace_back(maze_template);
+            maze = maze_vector.end() - 1;
         }
     }
     fclose(var);
-    maze_deque.pop_back();
+    maze_vector.pop_back();
 
     //
     vector<int> dst = {3,4,5};
-    maze_deque.at(0).dijkstra(0, dst);
-    maze_deque.at(1).dijkstra(0, dst);
-    maze_deque.at(2).dijkstra(0, dst);
-    maze_deque.at(3).dijkstra(0, dst);
-    maze_deque.at(4).dijkstra(0, dst);
-    maze_deque.at(5).dijkstra(0, dst);
+    vector<int> path;
+//    maze_vector.at(0).dijkstra(0, dst, path);
+//    maze_vector.at(1).dijkstra(0, dst, path);
+//    maze_vector.at(2).dijkstra(0, dst, path);
+
+    Drone drone;
+    drone.plan(maze_vector, 0,dst);
+
     return 0;
 }

@@ -4,6 +4,8 @@
 #include "maze_map.h"
 
 Map::Map(int _node_num) {
+    // 默认是可能的
+    is_possible = true;
     node_num = _node_num;
     for(int i = 0; i<node_num; i++)
     {
@@ -138,5 +140,86 @@ void Map::dijkstra(const int &src_id, const vector<int> &dst_id) {
         cout << endl;
         cout << "distance = " << min_distance2node.at(dst) << "m" << endl;
     }
+}
+
+void Map::dijkstra(const int &src_id, const vector<int> &dst_id, vector<int> &path) {
+    if(!path.empty())
+    {
+        path.clear();
+    }
+    // 未确定的最短路径长度
+    vector<double> distance2node(node_num,INF_D);
+    // 确定的最短路径长度
+    vector<double> min_distance2node(node_num,INF_D);
+    // 确定的最短路径长度
+    vector<bool> path_find(node_num,false);
+    // 上一节点
+    vector<int> path2node(node_num,-1);
+
+    // 确定距离当前顶点最近的最短路径
+    distance2node.at(src_id) = 0;
+    min_distance2node.at(src_id) = 0;
+    double min_dis = *min_element(distance2node.begin(), distance2node.end());
+    while(min_dis > INF_D+0.1 || min_dis < INF_D - 0.1)
+    {
+        min_dis = *min_element(distance2node.begin(), distance2node.end());
+        // 确定最短路径及长度
+        int min_id = min_element(distance2node.begin(), distance2node.end()) - distance2node.begin();
+        path_find.at(min_id) = true;
+        min_distance2node.at(min_id) = distance2node.at(min_id);
+
+        auto it = node.begin()+min_id;
+        // 拓展min_id节点的edge
+        for(auto& edge:it->node_edge)
+        {
+            // 跳过确定的最短路径点
+            if(path_find.at(edge.dst_id))
+            {
+                continue;
+            }
+            // 如果经过min_id的距离更小，更新该节点的上一节点
+            if(edge.distance + min_distance2node.at(min_id) < distance2node.at(edge.dst_id))
+            {
+                path2node.at(edge.dst_id) = min_id;
+                distance2node.at(edge.dst_id) = edge.distance + min_distance2node.at(min_id);
+            }
+        }
+        // 不再考虑该节点
+        distance2node.at(min_id) = INF_D;
+    }
+
+    // 最近的目标点
+    int min_dst_id = dst_id.at(0);
+    double min_dst_dis = min_distance2node.at(0);
+    for(auto id:dst_id)
+    {
+        if(min_distance2node.at(id) < min_dst_dis)
+        {
+            min_dst_id = id;
+            min_dst_dis = min_distance2node.at(id);
+        }
+    }
+    cout << src_id << " to " << min_dst_id << ":";
+    int id = min_dst_id;
+    id = path2node.at(id);
+    if(id == -1)
+    {
+        cout << "no path";
+        return;
+    }
+    else
+    {
+        path.push_back(min_dst_id);
+        path.push_back(id);
+        cout << "<-" << id;
+        while(id != src_id)
+        {
+            id = path2node.at(id);
+            path.push_back(id);
+            cout << "<-" << id;
+        }
+        reverse(path.begin(), path.end());
+    }
+    cout << "; distance = " << min_distance2node.at(min_dst_id) << "m" << endl;
 }
 

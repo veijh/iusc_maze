@@ -10,6 +10,7 @@ const double INF_D = 999.0;
 
 #include <iostream>
 #include <vector>
+#include <list>
 #include <algorithm>
 using namespace std;
 class Edge
@@ -34,12 +35,14 @@ class Map
 private:
     int node_num;
 public:
+    bool is_possible;
     vector<Node> node;
     explicit Map(int _node_num = node_total_num);
     int get_node_num();
     void add_edge(const int &id1, const int &id2, const double &_distance);
     void del_edge(const int &id1, const int &id2);
     void dijkstra(const int &src_id, const vector<int> &dst_id);
+    void dijkstra(const int &src_id, const vector<int> &dst_id, vector<int> &path);
 };
 
 #endif //IUSC_MAZE_MAZE_MAP_H
