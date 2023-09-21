@@ -1,4 +1,5 @@
 #include <iostream>
+#include <ros/ros.h>
 #include "maze_map.h"
 #include "drone.h"
 #include <string>
@@ -8,7 +9,7 @@
 #include <cstdio>
 
 using namespace std;
-int main() {
+int main(int argc, char **argv) {
     std::cout << "Maze Solver Launch!!" << std::endl;
     const int real_node_num = 84;
     const double offset_x = 0.0-284.3;
@@ -73,7 +74,6 @@ int main() {
     }
     fclose(var);
     maze_vector.pop_back();
-
     //
     vector<int> dst = {3,4,5};
     vector<int> path;
@@ -82,7 +82,9 @@ int main() {
 //    maze_vector.at(2).dijkstra(0, dst, path);
 
     Drone drone;
-    drone.plan(maze_vector, 0,dst);
+    drone.plan(maze_vector, 0, dst);
+
+    /*
     for(auto &node:drone.merged_path)
     {
         cout << node;
@@ -93,6 +95,66 @@ int main() {
         else
         {
             cout << endl;
+        }
+    }
+    */
+    
+
+    // 如果规划的路径存在下一个节点
+    while(drone.next_node() != -1)
+    {
+        // 判断下一节点是否可达
+        if(drone.is_next_node_reachable())
+        {
+            drone.fly_to_node(drone.next_node(), maze_template);
+
+            /* 理想状态 */
+            while(!drone.is_reached())
+            {
+                drone.cur_x = drone.dsr_x;
+                drone.cur_y = drone.dsr_y;
+            }
+
+            // 实际
+            // while(!drone.is_reached()) ros::spinOnce();
+
+            drone.cur_node_id = drone.next_node();
+            drone.cur_node_ptr++;
+        }
+        // 节点不可达
+        else
+        {
+            int possible_map_count = 0;
+            // 重新筛选可能的地图
+            for(auto &map:maze_vector)
+            {
+                if(map.is_possible)
+                {
+                    for(auto &edge:map.node.at(drone.cur_node_id).node_edge)
+                    {
+                        // next_node不可达，说明不是该地图
+                        if(edge.dst_id == drone.next_node())
+                        {
+                            map.is_possible = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            drone.plan(maze_vector, drone.cur_node_id, dst);
+            // 不存在匹配的地图，直接飞向终点
+            if(drone.merged_path.empty())
+            {
+                drone.fly_to_node(3, maze_template);
+            }
+
+            /* 理想状态 */
+            while(!drone.is_reached())
+            {
+                drone.cur_x = drone.dsr_x;
+                drone.cur_y = drone.dsr_y;
+            }
+            drone.cur_node_id = 3;
         }
     }
     return 0;
