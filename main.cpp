@@ -4,6 +4,8 @@
 #include <string>
 #include <cmath>
 #include <deque>
+#include <cstring>
+#include <cstdio>
 
 using namespace std;
 int main() {
@@ -16,8 +18,8 @@ int main() {
     Map maze_template(real_node_num);
 
     // 从文件中读取maze拓扑
-    FILE *maze_topo = fopen("C:\\Users\\WJH\\CLionProjects\\iusc_maze\\maze_topo.csv", "r");
-    FILE *var = fopen("C:\\Users\\WJH\\CLionProjects\\iusc_maze\\var.csv", "r");
+    FILE *maze_topo = fopen("/home/wjh/Documents/iusc_maze/maze_topo.csv", "r");
+    FILE *var = fopen("/home/wjh/Documents/iusc_maze/var.csv", "r");
 
     if(maze_topo == NULL) {
         cout << "fail to open file maze_topo" << endl;
