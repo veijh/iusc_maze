@@ -5,7 +5,7 @@
 
 Drone::Drone(double x, double y)
 {
-    cur_node_id = 0;
+    cur_node_id = -1;
     cur_x = x;
     cur_y = y;
     cur_node_ptr = merged_path.begin();

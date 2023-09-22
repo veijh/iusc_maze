@@ -110,6 +110,7 @@ int main(int argc, char **argv) {
     if(main_init(maze_template, maze_vector)) return 0;
 
     //
+    vector<int> src = {0,1,2};
     vector<int> dst = {3,4,5};
     vector<int> path;
 
@@ -120,10 +121,38 @@ int main(int argc, char **argv) {
     nav_msgs::Path planned_path;
 
     // drone位置的初始化
-    Drone drone(maze_template.node.at(1).x, maze_template.node.at(1).y);
-    drone.cur_node_id = 1;
-    drone.plan(maze_vector, 1, dst);
+    Drone drone(0.0, 15.0);
 
+    // 飞向最近的起点
+    double min_dis = 999.0;
+    int start_id = -1;
+    for(int id:src)
+    {
+        double dx = drone.cur_x - maze_template.node.at(id).x;
+        double dy = drone.cur_y - maze_template.node.at(id).y;
+        double dis = sqrt(dx*dx+dy*dy);
+        if(dis < min_dis)
+        {
+            min_dis = dis;
+            start_id = id;
+        }
+    }
+
+    drone.fly_to_node(start_id, maze_template);
+    /* 理想状态 */
+    while(!drone.is_reached())
+    {
+        drone.cur_x = drone.dsr_x;
+        drone.cur_y = drone.dsr_y;
+        drone_pose.header.stamp = ros::Time::now();
+        drone_pose.pose.position.x = drone.cur_x;
+        drone_pose.pose.position.y = drone.cur_y;
+        pos_pub.publish(drone_pose);
+        loop_rate.sleep();
+    }
+    drone.cur_node_id = start_id;
+
+    drone.plan(maze_vector, start_id, dst);
     path_to_ros(drone.merged_path, planned_path, maze_template);
     path_pub.publish(planned_path);
 
