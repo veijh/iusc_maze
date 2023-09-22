@@ -1,4 +1,5 @@
 #include <iostream>
+#include <ros/ros.h>
 #include "maze_map.h"
 #include "drone.h"
 #include <string>
@@ -6,9 +7,17 @@
 #include <deque>
 #include <cstring>
 #include <cstdio>
+#include <nav_msgs/Path.h>
 
 using namespace std;
 int main(int argc, char **argv) {
+    ros::init(argc, argv, "iusc_maze");
+    ros::NodeHandle nh;
+    ros::Publisher path_pub = nh.advertise<nav_msgs::Path>("planned_path", 1, true);
+    ros::Publisher pos_pub = nh.advertise<geometry_msgs::PoseStamped>("cur_pose", 1, true);
+
+    ros::Rate loop_rate(1);
+
     std::cout << "Maze Solver Launch!!" << std::endl;
     const int real_node_num = 84;
     const double offset_x = 0.0-284.3;
@@ -76,27 +85,31 @@ int main(int argc, char **argv) {
     //
     vector<int> dst = {3,4,5};
     vector<int> path;
-//    maze_vector.at(0).dijkstra(0, dst, path);
-//    maze_vector.at(1).dijkstra(0, dst, path);
-//    maze_vector.at(2).dijkstra(0, dst, path);
 
-    Drone drone;
-    drone.plan(maze_vector, 0, dst);
+    geometry_msgs::PoseStamped drone_pose;
+    drone_pose.header.frame_id = "world";
+    drone_pose.header.stamp = ros::Time::now();
 
-    /*
+    nav_msgs::Path planned_path;
+    planned_path.header.frame_id = "world";
+
+    Drone drone(maze_template.node.at(1).x, maze_template.node.at(1).y);
+    drone.cur_node_id = 1;
+    drone.plan(maze_vector, 1, dst);
+
+    planned_path.header.stamp = ros::Time::now();
+    planned_path.poses.clear();
     for(auto &node:drone.merged_path)
     {
-        cout << node;
-        if(&node != &drone.merged_path.back())
-        {
-            cout << "->";
-        }
-        else
-        {
-            cout << endl;
-        }
+        geometry_msgs::PoseStamped pos;
+        pos.pose.position.x = maze_template.node.at(node).x;
+        pos.pose.position.y = maze_template.node.at(node).y;
+
+        pos.header.frame_id = planned_path.header.frame_id;
+        pos.header.stamp = ros::Time::now();
+        planned_path.poses.push_back(pos);
     }
-    */
+    path_pub.publish(planned_path);
 
     // 如果规划的路径存在下一个节点
     while(drone.next_node() != -1)
@@ -111,6 +124,11 @@ int main(int argc, char **argv) {
             {
                 drone.cur_x = drone.dsr_x;
                 drone.cur_y = drone.dsr_y;
+                drone_pose.header.stamp = ros::Time::now();
+                drone_pose.pose.position.x = drone.cur_x;
+                drone_pose.pose.position.y = drone.cur_y;
+                pos_pub.publish(drone_pose);
+                loop_rate.sleep();
             }
 
             // 实际
@@ -140,6 +158,21 @@ int main(int argc, char **argv) {
                 }
             }
             drone.plan(maze_vector, drone.cur_node_id, dst);
+
+            planned_path.header.stamp = ros::Time::now();
+            planned_path.poses.clear();
+            for(auto &node:drone.merged_path)
+            {
+                geometry_msgs::PoseStamped pos;
+                pos.pose.position.x = maze_template.node.at(node).x;
+                pos.pose.position.y = maze_template.node.at(node).y;
+
+                pos.header.frame_id = planned_path.header.frame_id;
+                pos.header.stamp = ros::Time::now();
+                planned_path.poses.push_back(pos);
+            }
+            path_pub.publish(planned_path);
+
             // 不存在匹配的地图，直接飞向终点
             if(drone.merged_path.empty())
             {
