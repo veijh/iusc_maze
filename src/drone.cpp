@@ -19,6 +19,10 @@ int Drone::plan(vector<Map> &map_vector, const int &src_id, const vector<int> &d
     {
         path_list.clear();
     }
+    if(!merged_path.empty())
+    {
+        merged_path.clear();
+    }
     for (auto &map:map_vector)
     {
         map.dijkstra(src_id, dst_id, path);
@@ -44,7 +48,7 @@ int Drone::plan(vector<Map> &map_vector, const int &src_id, const vector<int> &d
         // 删去其他候选路径
         for(int i = 0; i<candidate_path_id.size(); i++)
         {
-            if(path_list.at(i).at(count) != merged_path.back())
+            if(path_list.at(candidate_path_id.at(i)).at(count) != merged_path.back())
             {
                 candidate_path_id.erase(i+candidate_path_id.begin());
             }

@@ -1,5 +1,4 @@
 #include <iostream>
-#include <ros/ros.h>
 #include "maze_map.h"
 #include "drone.h"
 #include <string>
@@ -98,13 +97,12 @@ int main(int argc, char **argv) {
         }
     }
     */
-    
 
     // 如果规划的路径存在下一个节点
     while(drone.next_node() != -1)
     {
         // 判断下一节点是否可达
-        if(drone.is_next_node_reachable())
+        if(drone.is_next_node_reachable(maze_vector.at(1)))
         {
             drone.fly_to_node(drone.next_node(), maze_template);
 
@@ -146,15 +144,16 @@ int main(int argc, char **argv) {
             if(drone.merged_path.empty())
             {
                 drone.fly_to_node(3, maze_template);
+                /* 理想状态 */
+                while(!drone.is_reached())
+                {
+                    drone.cur_x = drone.dsr_x;
+                    drone.cur_y = drone.dsr_y;
+                }
+                drone.cur_node_id = 3;
             }
 
-            /* 理想状态 */
-            while(!drone.is_reached())
-            {
-                drone.cur_x = drone.dsr_x;
-                drone.cur_y = drone.dsr_y;
-            }
-            drone.cur_node_id = 3;
+
         }
     }
     return 0;
