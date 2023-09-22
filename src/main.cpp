@@ -23,12 +23,12 @@ int main_init(Map &maze_template, vector<Map> &maze_vector)
 
     if(maze_topo == NULL) {
         cout << "fail to open file maze_topo" << endl;
-        return 0;
+        return 1;
     }
 
     if(var == NULL) {
         cout << "fail to open file var" << endl;
-        return 0;
+        return 1;
     }
 
     for(int i = 0; i<real_node_num; i++)
@@ -73,7 +73,26 @@ int main_init(Map &maze_template, vector<Map> &maze_vector)
     }
     fclose(var);
     maze_vector.pop_back();
+    return 0;
 }
+
+void path_to_ros(vector<int> &path, nav_msgs::Path &ros_path, Map &maze_template)
+{
+    ros_path.header.frame_id = "world";
+    ros_path.header.stamp = ros::Time::now();
+    ros_path.poses.clear();
+    for(auto &node:path)
+    {
+        geometry_msgs::PoseStamped pos;
+        pos.pose.position.x = maze_template.node.at(node).x;
+        pos.pose.position.y = maze_template.node.at(node).y;
+
+        pos.header.frame_id = ros_path.header.frame_id;
+        pos.header.stamp = ros::Time::now();
+        ros_path.poses.push_back(pos);
+    }
+}
+
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "iusc_maze");
@@ -88,7 +107,7 @@ int main(int argc, char **argv) {
     vector<Map> maze_vector;
     Map maze_template(real_node_num);
     
-    main_init(maze_template, maze_vector);
+    if(main_init(maze_template, maze_vector)) return 0;
 
     //
     vector<int> dst = {3,4,5};
@@ -99,25 +118,13 @@ int main(int argc, char **argv) {
     drone_pose.header.stamp = ros::Time::now();
 
     nav_msgs::Path planned_path;
-    planned_path.header.frame_id = "world";
 
     // drone位置的初始化
     Drone drone(maze_template.node.at(1).x, maze_template.node.at(1).y);
     drone.cur_node_id = 1;
     drone.plan(maze_vector, 1, dst);
 
-    planned_path.header.stamp = ros::Time::now();
-    planned_path.poses.clear();
-    for(auto &node:drone.merged_path)
-    {
-        geometry_msgs::PoseStamped pos;
-        pos.pose.position.x = maze_template.node.at(node).x;
-        pos.pose.position.y = maze_template.node.at(node).y;
-
-        pos.header.frame_id = planned_path.header.frame_id;
-        pos.header.stamp = ros::Time::now();
-        planned_path.poses.push_back(pos);
-    }
+    path_to_ros(drone.merged_path, planned_path, maze_template);
     path_pub.publish(planned_path);
 
     // 如果规划的路径存在下一个节点
@@ -168,18 +175,7 @@ int main(int argc, char **argv) {
             }
             drone.plan(maze_vector, drone.cur_node_id, dst);
 
-            planned_path.header.stamp = ros::Time::now();
-            planned_path.poses.clear();
-            for(auto &node:drone.merged_path)
-            {
-                geometry_msgs::PoseStamped pos;
-                pos.pose.position.x = maze_template.node.at(node).x;
-                pos.pose.position.y = maze_template.node.at(node).y;
-
-                pos.header.frame_id = planned_path.header.frame_id;
-                pos.header.stamp = ros::Time::now();
-                planned_path.poses.push_back(pos);
-            }
+            path_to_ros(drone.merged_path, planned_path, maze_template);
             path_pub.publish(planned_path);
 
             // 不存在匹配的地图，直接飞向终点
