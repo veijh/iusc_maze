@@ -10,22 +10,13 @@
 #include <nav_msgs/Path.h>
 
 using namespace std;
-int main(int argc, char **argv) {
-    ros::init(argc, argv, "iusc_maze");
-    ros::NodeHandle nh;
-    ros::Publisher path_pub = nh.advertise<nav_msgs::Path>("planned_path", 1, true);
-    ros::Publisher pos_pub = nh.advertise<geometry_msgs::PoseStamped>("cur_pose", 1, true);
+const int real_node_num = 84;
+const double offset_x = 0.0-284.3;
+const double offset_y = 242.5-400.34;
+const double scale = 0.1;
 
-    ros::Rate loop_rate(1);
-
-    std::cout << "Maze Solver Launch!!" << std::endl;
-    const int real_node_num = 84;
-    const double offset_x = 0.0-284.3;
-    const double offset_y = 242.5-400.34;
-    const double scale = 0.1;
-    vector<Map> maze_vector;
-    Map maze_template(real_node_num);
-
+int main_init(Map &maze_template, vector<Map> &maze_vector)
+{
     // 从文件中读取maze拓扑
     FILE *maze_topo = fopen("/home/wjh/Documents/iusc_maze/maze_topo.csv", "r");
     FILE *var = fopen("/home/wjh/Documents/iusc_maze/var.csv", "r");
@@ -82,6 +73,23 @@ int main(int argc, char **argv) {
     }
     fclose(var);
     maze_vector.pop_back();
+}
+
+int main(int argc, char **argv) {
+    ros::init(argc, argv, "iusc_maze");
+    ros::NodeHandle nh;
+    ros::Publisher path_pub = nh.advertise<nav_msgs::Path>("planned_path", 1, true);
+    ros::Publisher pos_pub = nh.advertise<geometry_msgs::PoseStamped>("cur_pose", 1, true);
+
+    ros::Rate loop_rate(1);
+
+    std::cout << "Maze Solver Launch!!" << std::endl;
+    
+    vector<Map> maze_vector;
+    Map maze_template(real_node_num);
+    
+    main_init(maze_template, maze_vector);
+
     //
     vector<int> dst = {3,4,5};
     vector<int> path;
@@ -93,6 +101,7 @@ int main(int argc, char **argv) {
     nav_msgs::Path planned_path;
     planned_path.header.frame_id = "world";
 
+    // drone位置的初始化
     Drone drone(maze_template.node.at(1).x, maze_template.node.at(1).y);
     drone.cur_node_id = 1;
     drone.plan(maze_vector, 1, dst);
