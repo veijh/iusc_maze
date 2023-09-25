@@ -8,6 +8,7 @@
 #include <cstring>
 #include <cstdio>
 #include <nav_msgs/Path.h>
+#include <tf/tf.h>
 
 using namespace std;
 const int real_node_num = 84;
@@ -96,11 +97,11 @@ void path_to_ros(vector<int> &path, nav_msgs::Path &ros_path, Map &maze_template
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "iusc_maze");
-    ros::NodeHandle nh;
+    ros::NodeHandle nh("~");
     ros::Publisher path_pub = nh.advertise<nav_msgs::Path>("planned_path", 1, true);
     ros::Publisher pos_pub = nh.advertise<geometry_msgs::PoseStamped>("cur_pose", 1, true);
 
-    ros::Rate loop_rate(1);
+    ros::Rate loop_rate(10);
 
     std::cout << "Maze Solver Launch!!" << std::endl;
     
@@ -120,8 +121,12 @@ int main(int argc, char **argv) {
 
     nav_msgs::Path planned_path;
 
+    double x0 = 0.0, y0 = 0.0;
+    nh.getParam("initial_x", x0);
+    nh.getParam("initial_y", y0);
+
     // drone位置的初始化
-    Drone drone(0.0, 15.0);
+    Drone drone(x0, y0);
 
     // 飞向最近的起点
     double min_dis = 999.0;
@@ -142,11 +147,18 @@ int main(int argc, char **argv) {
     /* 理想状态 */
     while(!drone.is_reached())
     {
-        drone.cur_x = drone.dsr_x;
-        drone.cur_y = drone.dsr_y;
+        drone.cur_x = drone.cur_x + 0.1*cos(drone.dsr_yaw);
+        drone.cur_y = drone.cur_y + 0.1*sin(drone.dsr_yaw);
         drone_pose.header.stamp = ros::Time::now();
         drone_pose.pose.position.x = drone.cur_x;
         drone_pose.pose.position.y = drone.cur_y;
+
+        tf::Quaternion q;
+        q.setRPY(0, 0, drone.dsr_yaw);
+        drone_pose.pose.orientation.x = q.x();
+        drone_pose.pose.orientation.y = q.y();
+        drone_pose.pose.orientation.z = q.z();
+        drone_pose.pose.orientation.w = q.w();
         pos_pub.publish(drone_pose);
         loop_rate.sleep();
     }
@@ -167,11 +179,18 @@ int main(int argc, char **argv) {
             /* 理想状态 */
             while(!drone.is_reached())
             {
-                drone.cur_x = drone.dsr_x;
-                drone.cur_y = drone.dsr_y;
+                drone.cur_x = drone.cur_x + 0.1*cos(drone.dsr_yaw);
+                drone.cur_y = drone.cur_y + 0.1*sin(drone.dsr_yaw);
                 drone_pose.header.stamp = ros::Time::now();
                 drone_pose.pose.position.x = drone.cur_x;
                 drone_pose.pose.position.y = drone.cur_y;
+                
+                tf::Quaternion q;
+                q.setRPY(0, 0, drone.dsr_yaw);
+                drone_pose.pose.orientation.x = q.x();
+                drone_pose.pose.orientation.y = q.y();
+                drone_pose.pose.orientation.z = q.z();
+                drone_pose.pose.orientation.w = q.w();
                 pos_pub.publish(drone_pose);
                 loop_rate.sleep();
             }
@@ -223,5 +242,6 @@ int main(int argc, char **argv) {
 
         }
     }
+    while(ros::ok());
     return 0;
 }

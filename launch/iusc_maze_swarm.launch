@@ -1,0 +1,28 @@
+<launch>
+	<node name = "uav0" pkg="iusc_maze" type="iusc_maze_node" output="screen">
+		<param name="initial_x" type="double" value="-1.0"/>
+		<param name="initial_y" type="double" value="22.5"/>
+	</node>
+	<node name = "uav1" pkg="iusc_maze" type="iusc_maze_node" output="screen">
+		<param name="initial_x" type="double" value="-1.0"/>
+		<param name="initial_y" type="double" value="15.0"/>
+	</node>
+	<node name = "uav2" pkg="iusc_maze" type="iusc_maze_node" output="screen">
+		<param name="initial_x" type="double" value="-1.0"/>
+		<param name="initial_y" type="double" value="7.5"/>
+	</node>
+	<node name = "uav3" pkg="iusc_maze" type="iusc_maze_node" output="screen">
+		<param name="initial_x" type="double" value="-3.0"/>
+		<param name="initial_y" type="double" value="22.5"/>
+	</node>
+	<node name = "uav4" pkg="iusc_maze" type="iusc_maze_node" output="screen">
+		<param name="initial_x" type="double" value="-3.0"/>
+		<param name="initial_y" type="double" value="15.0"/>
+	</node>
+	<node name = "uav5" pkg="iusc_maze" type="iusc_maze_node" output="screen">
+		<param name="initial_x" type="double" value="-3.0"/>
+		<param name="initial_y" type="double" value="7.5"/>
+	</node>
+	
+	<node name = "rviz" pkg="rviz" type="rviz" args="-d $(find iusc_maze)/rviz.rviz" required="true"/>
+</launch>

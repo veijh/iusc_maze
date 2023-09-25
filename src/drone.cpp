@@ -72,6 +72,7 @@ void Drone::fly_to_node(int id, Map &map)
     cout << cur_node_id << " -> ";
     dsr_x = map.node.at(id).x;
     dsr_y = map.node.at(id).y;
+    dsr_yaw = atan2(dsr_y-cur_y, dsr_x-cur_x);
     cout << id << endl;
 }
 

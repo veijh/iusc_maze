@@ -20,6 +20,7 @@ class Drone
 public:
     double cur_x,cur_y;
     double dsr_x, dsr_y;
+    double dsr_yaw;
 
     int cur_node_id;
 
