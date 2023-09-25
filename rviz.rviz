@@ -202,28 +202,28 @@ Visualization Manager:
       Class: rviz/Pose
       Color: 255; 25; 0
       Enabled: true
-      Head Length: 0.30000001192092896
-      Head Radius: 0.10000000149011612
+      Head Length: 0.4000000059604645
+      Head Radius: 0.800000011920929
       Name: Pose
       Queue Size: 10
-      Shaft Length: 1
-      Shaft Radius: 0.05000000074505806
+      Shaft Length: 0.4000000059604645
+      Shaft Radius: 0.4000000059604645
       Shape: Arrow
       Topic: /uav0/cur_pose
       Unreliable: false
       Value: true
     - Alpha: 1
-      Axes Length: 1
-      Axes Radius: 0.10000000149011612
+      Axes Length: 0.4000000059604645
+      Axes Radius: 0.20000000298023224
       Class: rviz/Pose
       Color: 255; 25; 0
       Enabled: true
-      Head Length: 0.30000001192092896
-      Head Radius: 0.10000000149011612
+      Head Length: 0.4000000059604645
+      Head Radius: 0.800000011920929
       Name: Pose
       Queue Size: 10
-      Shaft Length: 1
-      Shaft Radius: 0.05000000074505806
+      Shaft Length: 0.4000000059604645
+      Shaft Radius: 0.4000000059604645
       Shape: Arrow
       Topic: /uav1/cur_pose
       Unreliable: false
@@ -234,12 +234,12 @@ Visualization Manager:
       Class: rviz/Pose
       Color: 255; 25; 0
       Enabled: true
-      Head Length: 0.30000001192092896
-      Head Radius: 0.10000000149011612
+      Head Length: 0.4000000059604645
+      Head Radius: 0.800000011920929
       Name: Pose
       Queue Size: 10
-      Shaft Length: 1
-      Shaft Radius: 0.05000000074505806
+      Shaft Length: 0.4000000059604645
+      Shaft Radius: 0.4000000059604645
       Shape: Arrow
       Topic: /uav2/cur_pose
       Unreliable: false
@@ -250,12 +250,12 @@ Visualization Manager:
       Class: rviz/Pose
       Color: 255; 25; 0
       Enabled: true
-      Head Length: 0.30000001192092896
-      Head Radius: 0.10000000149011612
+      Head Length: 0.4000000059604645
+      Head Radius: 0.800000011920929
       Name: Pose
       Queue Size: 10
-      Shaft Length: 1
-      Shaft Radius: 0.05000000074505806
+      Shaft Length: 0.4000000059604645
+      Shaft Radius: 0.4000000059604645
       Shape: Arrow
       Topic: /uav3/cur_pose
       Unreliable: false
@@ -266,12 +266,12 @@ Visualization Manager:
       Class: rviz/Pose
       Color: 255; 25; 0
       Enabled: true
-      Head Length: 0.30000001192092896
-      Head Radius: 0.10000000149011612
+      Head Length: 0.4000000059604645
+      Head Radius: 0.800000011920929
       Name: Pose
       Queue Size: 10
-      Shaft Length: 1
-      Shaft Radius: 0.05000000074505806
+      Shaft Length: 0.4000000059604645
+      Shaft Radius: 0.4000000059604645
       Shape: Arrow
       Topic: /uav4/cur_pose
       Unreliable: false
@@ -282,12 +282,12 @@ Visualization Manager:
       Class: rviz/Pose
       Color: 255; 25; 0
       Enabled: true
-      Head Length: 0.30000001192092896
-      Head Radius: 0.10000000149011612
+      Head Length: 0.4000000059604645
+      Head Radius: 0.800000011920929
       Name: Pose
       Queue Size: 10
-      Shaft Length: 1
-      Shaft Radius: 0.05000000074505806
+      Shaft Length: 0.4000000059604645
+      Shaft Radius: 0.4000000059604645
       Shape: Arrow
       Topic: /uav5/cur_pose
       Unreliable: false
@@ -320,7 +320,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 60.0947151184082
+      Distance: 33.91511154174805
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -328,17 +328,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 16.884296417236328
-        Y: 17.448646545410156
-        Z: -3.4689669609069824
+        X: 26.82859992980957
+        Y: 18.24541473388672
+        Z: -3.0136120319366455
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.3647966384887695
+      Pitch: 1.4197964668273926
       Target Frame: <Fixed Frame>
-      Yaw: 4.700392723083496
+      Yaw: 4.755402088165283
     Saved: ~
 Window Geometry:
   Displays:
