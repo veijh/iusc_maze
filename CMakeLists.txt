@@ -57,6 +57,8 @@ add_message_files(
   FILES
   Scheme.msg
   Swarm.msg
+  Deny.msg
+  Dst.msg
 )
 
 ## Generate services in the 'srv' folder

@@ -14,7 +14,7 @@
 		<param name="initial_y" type="double" value="7.5"/>
 		<param name="uav_id" type="int" value="2"/>
 	</node>
-	<node name = "uav3" pkg="iusc_maze" type="iusc_maze_node" output="log">
+	<node name = "uav3" pkg="iusc_maze" type="iusc_maze_node" output="screen">
 		<param name="initial_x" type="double" value="-3.0"/>
 		<param name="initial_y" type="double" value="22.5"/>
 		<param name="uav_id" type="int" value="3"/>

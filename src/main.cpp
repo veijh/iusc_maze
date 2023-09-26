@@ -11,6 +11,8 @@
 #include <tf/tf.h>
 #include "iusc_maze/Scheme.h"
 #include "iusc_maze/Swarm.h"
+#include "iusc_maze/Deny.h"
+#include "iusc_maze/Dst.h"
 #include <boost/bind.hpp>
 
 using namespace std;
@@ -136,6 +138,26 @@ void swarm_callback(const iusc_maze::Swarm::ConstPtr &swarm, vector<vector<doubl
     swarm_info->at(swarm->uav_id).at(1) = swarm->y;
 }
 
+// 订阅被占据的终点
+void dst_callback(const iusc_maze::Dst::ConstPtr &dst, vector<Map> *maze_vector)
+{
+    if(maze_vector->at(dst->dst_id).is_possible);
+}
+
+// 订阅排除的方案
+void deny_callback(const iusc_maze::Deny::ConstPtr &deny, vector<Map> *maze_vector, int *replan)
+{
+    if(maze_vector->at(deny->map_id).is_possible)
+    {
+        maze_vector->at(deny->map_id).is_possible = false;
+        *replan = 1;
+    }
+    else
+    {
+        *replan = 0;
+    }
+}
+
 // 多机协调
 int coordinate(Drone &drone, const vector<vector<int>> &swarm_scheme, const vector<vector<double>> &swarm_info, Map &maze_template)
 {
@@ -184,9 +206,9 @@ int main(int argc, char **argv) {
     // 动力学计算前发布本机位置
     ros::Publisher swarm_pub = nh.advertise<iusc_maze::Swarm>("/swarm", 1, true);
     // 前往终点前发布
-
+    ros::Publisher dst_pub = nh.advertise<iusc_maze::Dst>("/dst", 1, true);
     // 方案排除后发布
-
+    ros::Publisher deny_pub = nh.advertise<iusc_maze::Deny>("/deny", 10, true);
 
     ros::Rate loop_rate(10);
 
@@ -211,7 +233,10 @@ int main(int argc, char **argv) {
 
     iusc_maze::Scheme scheme;
     iusc_maze::Swarm swarm;
+    // 不可能的地图
+    iusc_maze::Deny map_denied;
 
+    map_denied.map_id = -1;
     double x0 = 0.0, y0 = 0.0;
     int uav_id = -1;
     nh.getParam("initial_x", x0);
@@ -233,8 +258,13 @@ int main(int argc, char **argv) {
     vector<vector<double>> swarm_info(6,vector<double>(2,-1.0));
     // 保存的其他无人机路径信息
     vector<vector<int>> swarm_scheme(6, vector<int>(2,-1));
+    // 是否需要重规划
+    int replan = 0;
+
     ros::Subscriber scheme_sub = nh.subscribe<iusc_maze::Scheme>("/scheme", 10, boost::bind(&scheme_callback, _1, &swarm_scheme));
     ros::Subscriber swarm_sub = nh.subscribe<iusc_maze::Swarm>("/swarm", 10, boost::bind(&swarm_callback, _1, &swarm_info));
+    ros::Subscriber dst_sub = nh.subscribe<iusc_maze::Dst>("/dst", 10, boost::bind(&dst_callback, _1, &maze_vector));
+    ros::Subscriber deny_sub = nh.subscribe<iusc_maze::Deny>("/deny", 10, boost::bind(&deny_callback, _1, &maze_vector, &replan));
 
     // 飞向最近的起点
     double min_dis = 999.0;
@@ -323,6 +353,23 @@ int main(int argc, char **argv) {
                 // 更新swarm_info和swarm_scheme
                 ros::spinOnce();
 
+                // 重规划
+                if(replan)
+                {
+                    // cout << "replan" << endl;
+                    int before = drone.next_node();
+                    drone.plan(maze_vector, drone.cur_node_id, dst);
+                    if(before != drone.next_node())
+                    {
+                        // cout << "replanning" << endl;
+                        drone.cur_node_id = before;
+                        drone.plan(maze_vector, drone.cur_node_id, dst);
+                    }
+                    path_to_ros(drone.merged_path, planned_path, maze_template);
+                    path_pub.publish(planned_path);
+                    break;
+                }
+
                 // 机间避碰协调
                 
                 if(coordinate(drone, swarm_scheme, swarm_info, maze_template))
@@ -356,9 +403,15 @@ int main(int argc, char **argv) {
 
             // 实际
             // while(!drone.is_reached()) ros::spinOnce();
-
-            drone.cur_node_id = drone.next_node();
-            drone.cur_node_ptr++;
+            if(replan)
+            {
+                replan = 0;
+            }
+            else
+            {
+                drone.cur_node_id = drone.next_node();
+                drone.cur_node_ptr++;
+            }
         }
         // 节点不可达
         else
@@ -375,6 +428,8 @@ int main(int argc, char **argv) {
                         if(edge.dst_id == drone.next_node())
                         {
                             map.is_possible = false;
+                            map_denied.map_id = &map-&maze_vector.at(0);
+                            deny_pub.publish(map_denied);
                             break;
                         }
                     }
