@@ -19,11 +19,12 @@ const double offset_x = 0.0-284.3;
 const double offset_y = 242.5-400.34;
 const double scale = 0.1;
 
-int main_init(Map &maze_template, vector<Map> &maze_vector)
+int main_init(Map &maze_template, vector<Map> &maze_vector, vector<Node> &end_node_vector)
 {
     // 从文件中读取maze拓扑
-    FILE *maze_topo = fopen("/home/wjh/Documents/iusc_maze/maze_topo.csv", "r");
-    FILE *var = fopen("/home/wjh/Documents/iusc_maze/var.csv", "r");
+    FILE *maze_topo = fopen("/home/wjh/catkin_ws/src/iusc_maze/maze_topo.csv", "r");
+    FILE *var = fopen("/home/wjh/catkin_ws/src/iusc_maze/var.csv", "r");
+    FILE *end = fopen("/home/wjh/catkin_ws/src/iusc_maze/end.csv", "r");
 
     if(maze_topo == NULL) {
         cout << "fail to open file maze_topo" << endl;
@@ -32,6 +33,11 @@ int main_init(Map &maze_template, vector<Map> &maze_vector)
 
     if(var == NULL) {
         cout << "fail to open file var" << endl;
+        return 1;
+    }
+
+    if(end == NULL) {
+        cout << "fail to open file end" << endl;
         return 1;
     }
 
@@ -77,6 +83,16 @@ int main_init(Map &maze_template, vector<Map> &maze_vector)
     }
     fclose(var);
     maze_vector.pop_back();
+
+    double end_x = 0.0, end_y = 0.0;
+    int count;
+    for(int i = 0; i<6; i++)
+    {
+        fscanf(end, "%lf,%lf", &end_x, &end_y);
+        Node node(real_node_num+i, 30.0+end_x, end_y);
+        end_node_vector.push_back(node);
+    }
+    fclose(end);
     return 0;
 }
 
@@ -163,10 +179,14 @@ int main(int argc, char **argv) {
     ros::Publisher pos_pub = nh.advertise<geometry_msgs::PoseStamped>("cur_pose", 1, true);
 
     // 多机通信
-    // fly_to_node后发布
+    // fly_to_node后发布路径方案
     ros::Publisher scheme_pub = nh.advertise<iusc_maze::Scheme>("/scheme", 1, true);
-    // 动力学计算前发布
+    // 动力学计算前发布本机位置
     ros::Publisher swarm_pub = nh.advertise<iusc_maze::Swarm>("/swarm", 1, true);
+    // 前往终点前发布
+
+    // 方案排除后发布
+
 
     ros::Rate loop_rate(10);
 
@@ -174,8 +194,9 @@ int main(int argc, char **argv) {
     
     vector<Map> maze_vector;
     Map maze_template(real_node_num);
-    
-    if(main_init(maze_template, maze_vector)) return 0;
+    vector<Node> end_node_vector;
+
+    if(main_init(maze_template, maze_vector, end_node_vector)) return 0;
 
     //
     vector<int> src = {0,1,2};
@@ -380,5 +401,8 @@ int main(int argc, char **argv) {
     }
     // 飞向终点
     while(ros::ok());
+
+    // 发布节点信息
+
     return 0;
 }
