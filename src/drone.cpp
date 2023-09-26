@@ -8,6 +8,18 @@ Drone::Drone(double x, double y)
     cur_node_id = -1;
     cur_x = x;
     cur_y = y;
+    dsr_vel = 0;
+    cur_node_ptr = merged_path.begin();
+}
+
+
+Drone::Drone(double x, double y, int id)
+{
+    cur_node_id = -1;
+    cur_x = x;
+    cur_y = y;
+    dsr_vel = 0;
+    uav_id = id;
     cur_node_ptr = merged_path.begin();
 }
 
@@ -74,6 +86,12 @@ void Drone::fly_to_node(int id, Map &map)
     dsr_y = map.node.at(id).y;
     dsr_yaw = atan2(dsr_y-cur_y, dsr_x-cur_x);
     cout << id << endl;
+    if(cur_node_id == -1)
+    {
+        merged_path.push_back(-1);
+        merged_path.push_back(id);
+        cur_node_ptr = merged_path.begin();
+    }
 }
 
 int Drone::next_node()

@@ -18,10 +18,12 @@ const double dis_th = 0.3;
 class Drone
 {
 public:
-    double cur_x,cur_y;
+    double cur_x, cur_y;
     double dsr_x, dsr_y;
     double dsr_yaw;
+    double dsr_vel;
 
+    int uav_id;
     int cur_node_id;
 
     vector<vector<int>> path_list;
@@ -29,6 +31,7 @@ public:
     vector<int>::iterator cur_node_ptr;
 
     Drone(double x=0.0, double y=0.0);
+    Drone(double x, double y, int id);
     bool is_next_node_reachable();
     bool is_next_node_reachable(Map &map);
     int plan(vector<Map> &map_vector, const int &src_id, const vector<int> &dst_id);
