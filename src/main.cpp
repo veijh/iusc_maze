@@ -93,6 +93,7 @@ int main_init(Map &maze_template, vector<Map> &maze_vector, vector<Node> &end_no
         fscanf(end, "%lf,%lf", &end_x, &end_y);
         Node node(real_node_num+i, 30.0+end_x, end_y);
         end_node_vector.push_back(node);
+        maze_template.node.push_back(node);
     }
     fclose(end);
     return 0;
@@ -139,9 +140,12 @@ void swarm_callback(const iusc_maze::Swarm::ConstPtr &swarm, vector<vector<doubl
 }
 
 // 订阅被占据的终点
-void dst_callback(const iusc_maze::Dst::ConstPtr &dst, vector<Map> *maze_vector)
+void dst_callback(const iusc_maze::Dst::ConstPtr &dst, vector<int> *is_occupied)
 {
-    if(maze_vector->at(dst->dst_id).is_possible);
+    if(!is_occupied->at(dst->dst_id-real_node_num))
+    {
+        is_occupied->at(dst->dst_id-real_node_num) = 1;
+    }
 }
 
 // 订阅排除的方案
@@ -235,13 +239,16 @@ int main(int argc, char **argv) {
     iusc_maze::Swarm swarm;
     // 不可能的地图
     iusc_maze::Deny map_denied;
+    iusc_maze::Dst end_dst;
 
     map_denied.map_id = -1;
     double x0 = 0.0, y0 = 0.0;
     int uav_id = -1;
+    int sim_map_id = -1;
     nh.getParam("initial_x", x0);
     nh.getParam("initial_y", y0);
     nh.getParam("uav_id", uav_id);
+    nh.getParam("/sim_map_id", sim_map_id);
 
     // drone位置的初始化
     Drone drone(x0, y0, uav_id);
@@ -260,10 +267,12 @@ int main(int argc, char **argv) {
     vector<vector<int>> swarm_scheme(6, vector<int>(2,-1));
     // 是否需要重规划
     int replan = 0;
+    // 待选的目标位置
+    vector<int> is_occupied(6, 0);
 
     ros::Subscriber scheme_sub = nh.subscribe<iusc_maze::Scheme>("/scheme", 10, boost::bind(&scheme_callback, _1, &swarm_scheme));
     ros::Subscriber swarm_sub = nh.subscribe<iusc_maze::Swarm>("/swarm", 10, boost::bind(&swarm_callback, _1, &swarm_info));
-    ros::Subscriber dst_sub = nh.subscribe<iusc_maze::Dst>("/dst", 10, boost::bind(&dst_callback, _1, &maze_vector));
+    ros::Subscriber dst_sub = nh.subscribe<iusc_maze::Dst>("/dst", 10, boost::bind(&dst_callback, _1, &is_occupied));
     ros::Subscriber deny_sub = nh.subscribe<iusc_maze::Deny>("/deny", 10, boost::bind(&deny_callback, _1, &maze_vector, &replan));
 
     // 飞向最近的起点
@@ -303,7 +312,7 @@ int main(int argc, char **argv) {
         }
         else
         {
-            drone.dsr_vel = 0.1;
+            drone.dsr_vel = 0.2;
         }
         
         
@@ -336,7 +345,7 @@ int main(int argc, char **argv) {
     while(drone.next_node() != -1)
     {
         // 判断下一节点是否可达
-        if(drone.is_next_node_reachable(maze_vector.at(1)))
+        if(drone.is_next_node_reachable(maze_vector.at(sim_map_id)))
         {
             drone.fly_to_node(drone.next_node(), maze_template);
             scheme.src_id = drone.cur_node_id;
@@ -378,8 +387,9 @@ int main(int argc, char **argv) {
                 }
                 else
                 {
-                    drone.dsr_vel = 0.1;
+                    drone.dsr_vel = 0.2;
                 }
+                
 
                 // 仿真中的动力学
                 drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw);
@@ -454,8 +464,63 @@ int main(int argc, char **argv) {
             }
         }
     }
-    // 飞向终点
-    while(ros::ok());
+
+    // 飞向最近的终点
+    min_dis = 999.0;
+    int end_id = -1;
+    for(auto &end_node:end_node_vector)
+    {
+        if(!is_occupied.at(end_node.id-real_node_num))
+        {
+            double dis = norm2d(drone.cur_x, drone.cur_y,
+                end_node.x, end_node.y);
+            if(dis < min_dis)
+            {
+                min_dis = dis;
+                end_id = end_node.id;
+            }
+        }
+    }
+
+    end_dst.uav_id = drone.uav_id;
+    end_dst.dst_id = end_id;
+    dst_pub.publish(end_dst);
+
+    drone.fly_to_node(end_id, maze_template);
+
+    /* 理想状态 */
+    while(!drone.is_reached())
+    {
+        swarm.x = drone.cur_x;
+        swarm.y = drone.cur_y;
+        swarm_pub.publish(swarm);
+
+        // 更新swarm_info和swarm_scheme
+        ros::spinOnce();
+
+        // 机间避碰协调
+        drone.dsr_vel = 0.2;
+        
+        // 仿真中的动力学
+        drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw);
+        drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw);
+
+        // 发布位置用于可视化
+        drone_pose.header.stamp = ros::Time::now();
+        drone_pose.pose.position.x = drone.cur_x;
+        drone_pose.pose.position.y = drone.cur_y;
+
+        // 发布姿态用于可视化
+        tf::Quaternion q;
+        q.setRPY(0, 0, drone.dsr_yaw);
+        drone_pose.pose.orientation.x = q.x();
+        drone_pose.pose.orientation.y = q.y();
+        drone_pose.pose.orientation.z = q.z();
+        drone_pose.pose.orientation.w = q.w();
+        pos_pub.publish(drone_pose);
+        loop_rate.sleep();
+    }
+    drone.cur_node_id = end_id;
 
     // 发布节点信息
 
