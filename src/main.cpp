@@ -206,15 +206,15 @@ int main(int argc, char **argv) {
 
     // 多机通信
     // fly_to_node后发布路径方案
-    ros::Publisher scheme_pub = nh.advertise<iusc_maze::Scheme>("/scheme", 1, true);
+    ros::Publisher scheme_pub = nh.advertise<iusc_maze::Scheme>("/scheme", 10, true);
     // 动力学计算前发布本机位置
-    ros::Publisher swarm_pub = nh.advertise<iusc_maze::Swarm>("/swarm", 1, true);
+    ros::Publisher swarm_pub = nh.advertise<iusc_maze::Swarm>("/swarm", 10, true);
     // 前往终点前发布
-    ros::Publisher dst_pub = nh.advertise<iusc_maze::Dst>("/dst", 1, true);
+    ros::Publisher dst_pub = nh.advertise<iusc_maze::Dst>("/dst", 10, true);
     // 方案排除后发布
     ros::Publisher deny_pub = nh.advertise<iusc_maze::Deny>("/deny", 10, true);
 
-    ros::Rate loop_rate(10);
+    ros::Rate loop_rate(50);
 
     std::cout << "Maze Solver Launch!!" << std::endl;
     
@@ -312,13 +312,13 @@ int main(int argc, char **argv) {
         }
         else
         {
-            drone.dsr_vel = 0.2;
+            drone.dsr_vel = 2.0;
         }
         
         
         // 仿真中的动力学
-        drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw);
-        drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw);
+        drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*0.02;
+        drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*0.02;
 
         // 发布位置用于可视化
         drone_pose.header.stamp = ros::Time::now();
@@ -387,13 +387,13 @@ int main(int argc, char **argv) {
                 }
                 else
                 {
-                    drone.dsr_vel = 0.2;
+                    drone.dsr_vel = 2.0;
                 }
                 
 
                 // 仿真中的动力学
-                drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw);
-                drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw);
+                drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*0.02;
+                drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*0.02;
 
                 // 发布位置
                 drone_pose.header.stamp = ros::Time::now();
@@ -499,11 +499,11 @@ int main(int argc, char **argv) {
         ros::spinOnce();
 
         // 机间避碰协调
-        drone.dsr_vel = 0.2;
+        drone.dsr_vel = 2.0;
         
         // 仿真中的动力学
-        drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw);
-        drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw);
+        drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*0.02;
+        drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*0.02;
 
         // 发布位置用于可视化
         drone_pose.header.stamp = ros::Time::now();

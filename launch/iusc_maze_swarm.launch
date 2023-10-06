@@ -1,5 +1,5 @@
 <launch>
-	<param name="sim_map_id" type="int" value="6"/>
+	<param name="sim_map_id" type="int" value="4"/>
 
 	<node name = "uav0" pkg="iusc_maze" type="iusc_maze_node" output="log">
 		<param name="initial_x" type="double" value="-1.0"/>
