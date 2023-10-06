@@ -79,7 +79,7 @@ int Drone::plan(vector<Map> &map_vector, const int &src_id, const vector<int> &d
     cur_node_ptr = merged_path.begin();
 }
 
-void Drone::fly_to_node(int id, Map &map)
+void Drone::set_target_pos(int id, Map &map)
 {
     cout << cur_node_id << " -> ";
     dsr_x = map.node.at(id).x;
@@ -113,6 +113,7 @@ int Drone::is_reached()
     if(dx*dx+dy*dy < dis_th*dis_th) return 1;
     else return 0;
 }
+
 int Drone::is_reached(double x, double y)
 {
     double dx = cur_x - x;

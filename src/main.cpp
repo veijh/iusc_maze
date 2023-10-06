@@ -99,6 +99,7 @@ int main_init(Map &maze_template, vector<Map> &maze_vector, vector<Node> &end_no
     return 0;
 }
 
+// 将merge_path转换为ros下的path，用于可视化
 void path_to_ros(vector<int> &path, nav_msgs::Path &ros_path, Map &maze_template)
 {
     ros_path.header.frame_id = "world";
@@ -123,10 +124,10 @@ double norm2d(const double &x1, const double &y1, const double &x2, const double
     return sqrt(dx*dx+dy*dy);
 }
 
-// 订阅其他无人机的路径消息
+// 订阅其他无人机的当前节点和目标节点
 void scheme_callback(const iusc_maze::Scheme::ConstPtr &scheme, vector<vector<int>> *swarm_scheme)
 {
-    //cout << scheme->uav_id << "," << scheme->src_id << "," << scheme->dst_id << endl;
+    //cout << scheme->uav_id << ":" << scheme->src_id << "->" << scheme->dst_id << endl;
     swarm_scheme->at(scheme->uav_id).at(0) = scheme->src_id;
     swarm_scheme->at(scheme->uav_id).at(1) = scheme->dst_id;
 }
@@ -134,7 +135,7 @@ void scheme_callback(const iusc_maze::Scheme::ConstPtr &scheme, vector<vector<in
 // 订阅其他无人机的位置消息
 void swarm_callback(const iusc_maze::Swarm::ConstPtr &swarm, vector<vector<double>> *swarm_info)
 {
-    //cout << swarm->uav_id << "," << swarm->x << "," << swarm->y << endl;
+    //cout << swarm->uav_id << ":" << swarm->x << "," << swarm->y << endl;
     swarm_info->at(swarm->uav_id).at(0) = swarm->x;
     swarm_info->at(swarm->uav_id).at(1) = swarm->y;
 }
@@ -148,7 +149,7 @@ void dst_callback(const iusc_maze::Dst::ConstPtr &dst, vector<int> *is_occupied)
     }
 }
 
-// 订阅排除的方案
+// 订阅排除的方案，replan代表是否需要重新规划
 void deny_callback(const iusc_maze::Deny::ConstPtr &deny, vector<Map> *maze_vector, int *replan)
 {
     if(maze_vector->at(deny->map_id).is_possible)
@@ -165,9 +166,12 @@ void deny_callback(const iusc_maze::Deny::ConstPtr &deny, vector<Map> *maze_vect
 // 多机协调
 int coordinate(Drone &drone, const vector<vector<int>> &swarm_scheme, const vector<vector<double>> &swarm_info, Map &maze_template)
 {
+    // 是否需要悬停以消解冲突
     int hold = 0;
 
+    // 下一个目标节点
     Node next = maze_template.node.at(drone.next_node());
+    // 本机与目标节点的距离
     double distance = norm2d(drone.cur_x, drone.cur_y, next.x, next.y);
     for(int i = 0; i<6; i++)
     {
@@ -205,7 +209,7 @@ int main(int argc, char **argv) {
     ros::Publisher pos_pub = nh.advertise<geometry_msgs::PoseStamped>("cur_pose", 1, true);
 
     // 多机通信
-    // fly_to_node后发布路径方案
+    // set_target_pos后发布路径方案
     ros::Publisher scheme_pub = nh.advertise<iusc_maze::Scheme>("/scheme", 10, true);
     // 动力学计算前发布本机位置
     ros::Publisher swarm_pub = nh.advertise<iusc_maze::Swarm>("/swarm", 10, true);
@@ -290,13 +294,17 @@ int main(int argc, char **argv) {
         }
     }
 
-    drone.fly_to_node(start_id, maze_template);
+    drone.set_target_pos(start_id, maze_template);
     scheme.dst_id = start_id;
     scheme_pub.publish(scheme);
 
     /* 理想状态 */
     while(!drone.is_reached())
     {
+        // 更新无人机状态信息
+        // 需要补充一个回调函数，更新cur_x，cur_y
+
+        // 给其他无人机发布本机位置信息
         swarm.x = drone.cur_x;
         swarm.y = drone.cur_y;
         swarm_pub.publish(swarm);
@@ -305,20 +313,22 @@ int main(int argc, char **argv) {
         ros::spinOnce();
 
         // 机间避碰协调
-        
         if(coordinate(drone, swarm_scheme, swarm_info, maze_template))
         {
+            // 悬停
             drone.dsr_vel = 0;
         }
         else
         {
+            // 运动
             drone.dsr_vel = 2.0;
         }
         
-        
-        // 仿真中的动力学
+        // 仿真中的动力学，实际应当被注释
         drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*0.02;
         drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*0.02;
+        
+        // 这里发布速度信息给控制器
 
         // 发布位置用于可视化
         drone_pose.header.stamp = ros::Time::now();
@@ -333,10 +343,14 @@ int main(int argc, char **argv) {
         drone_pose.pose.orientation.z = q.z();
         drone_pose.pose.orientation.w = q.w();
         pos_pub.publish(drone_pose);
+
+        // 控制发布信息的频率
         loop_rate.sleep();
     }
+    // 到达目标后，更新无人机所处节点
     drone.cur_node_id = start_id;
 
+    // 规划到目标点的最短路径
     drone.plan(maze_vector, start_id, dst);
     path_to_ros(drone.merged_path, planned_path, maze_template);
     path_pub.publish(planned_path);
@@ -344,10 +358,13 @@ int main(int argc, char **argv) {
     // 如果规划的路径存在下一个节点
     while(drone.next_node() != -1)
     {
+        // 当无人机到达下一节点附近时，判断下一节点是否可达
+
+
         // 判断下一节点是否可达
         if(drone.is_next_node_reachable(maze_vector.at(sim_map_id)))
         {
-            drone.fly_to_node(drone.next_node(), maze_template);
+            drone.set_target_pos(drone.next_node(), maze_template);
             scheme.src_id = drone.cur_node_id;
             scheme.dst_id = drone.next_node();
             scheme_pub.publish(scheme);
@@ -365,12 +382,10 @@ int main(int argc, char **argv) {
                 // 重规划
                 if(replan)
                 {
-                    // cout << "replan" << endl;
                     int before = drone.next_node();
                     drone.plan(maze_vector, drone.cur_node_id, dst);
                     if(before != drone.next_node())
                     {
-                        // cout << "replanning" << endl;
                         drone.cur_node_id = before;
                         drone.plan(maze_vector, drone.cur_node_id, dst);
                     }
@@ -379,8 +394,7 @@ int main(int argc, char **argv) {
                     break;
                 }
 
-                // 机间避碰协调
-                
+                // 机间避碰协调                
                 if(coordinate(drone, swarm_scheme, swarm_info, maze_template))
                 {
                     drone.dsr_vel = 0;
@@ -408,6 +422,7 @@ int main(int argc, char **argv) {
                 drone_pose.pose.orientation.z = q.z();
                 drone_pose.pose.orientation.w = q.w();
                 pos_pub.publish(drone_pose);
+                
                 loop_rate.sleep();
             }
 
@@ -453,7 +468,7 @@ int main(int argc, char **argv) {
             // 不存在匹配的地图，直接飞向终点
             if(drone.merged_path.empty())
             {
-                drone.fly_to_node(3, maze_template);
+                drone.set_target_pos(3, maze_template);
                 /* 理想状态 */
                 while(!drone.is_reached())
                 {
@@ -486,7 +501,7 @@ int main(int argc, char **argv) {
     end_dst.dst_id = end_id;
     dst_pub.publish(end_dst);
 
-    drone.fly_to_node(end_id, maze_template);
+    drone.set_target_pos(end_id, maze_template);
 
     /* 理想状态 */
     while(!drone.is_reached())
