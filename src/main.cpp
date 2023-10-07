@@ -20,6 +20,8 @@ const int real_node_num = 84;
 const double offset_x = 0.0-284.3;
 const double offset_y = 242.5-400.34;
 const double scale = 0.1;
+double mtg_dist = 1.6;
+double flw_dist = 1.6;
 
 int main_init(Map &maze_template, vector<Map> &maze_vector, vector<Node> &end_node_vector)
 {
@@ -181,9 +183,10 @@ int coordinate(Drone &drone, const vector<vector<int>> &swarm_scheme, const vect
         {
             // 目标点一定范围内无人机中，离目标点距离大的悬停
             double other_dis = norm2d(swarm_info.at(i).at(0), swarm_info.at(i).at(1), next.x, next.y);
-            if(other_dis < 1.6 && other_dis < distance)
+            if(other_dis < mtg_dist && distance < mtg_dist && other_dis < distance)
             {
                 hold = 1;
+                cout << "uav " << i << " first, its distance = " << other_dis << endl;
                 break;
             }
         }
@@ -192,9 +195,10 @@ int coordinate(Drone &drone, const vector<vector<int>> &swarm_scheme, const vect
         {
             // 不能靠近机器人至一定距离内
             double to_other_dis = norm2d(swarm_info.at(i).at(0), swarm_info.at(i).at(1), drone.cur_x, drone.cur_y);
-            if(to_other_dis < 1.6)
+            if(to_other_dis < flw_dist)
             {
                 hold = 1;
+                cout << "near uav " << i << " , distance = " << to_other_dis << endl;
                 break;
             }
         }
@@ -253,6 +257,8 @@ int main(int argc, char **argv) {
     nh.getParam("initial_y", y0);
     nh.getParam("uav_id", uav_id);
     nh.getParam("/sim_map_id", sim_map_id);
+    nh.getParam("/mtg_dist", mtg_dist);
+    nh.getParam("/flw_dist", flw_dist);
 
     // drone位置的初始化
     Drone drone(x0, y0, uav_id);
@@ -274,8 +280,8 @@ int main(int argc, char **argv) {
     // 待选的目标位置
     vector<int> is_occupied(6, 0);
 
-    ros::Subscriber scheme_sub = nh.subscribe<iusc_maze::Scheme>("/scheme", 10, boost::bind(&scheme_callback, _1, &swarm_scheme));
-    ros::Subscriber swarm_sub = nh.subscribe<iusc_maze::Swarm>("/swarm", 10, boost::bind(&swarm_callback, _1, &swarm_info));
+    ros::Subscriber scheme_sub = nh.subscribe<iusc_maze::Scheme>("/scheme", 50, boost::bind(&scheme_callback, _1, &swarm_scheme));
+    ros::Subscriber swarm_sub = nh.subscribe<iusc_maze::Swarm>("/swarm", 50, boost::bind(&swarm_callback, _1, &swarm_info));
     ros::Subscriber dst_sub = nh.subscribe<iusc_maze::Dst>("/dst", 10, boost::bind(&dst_callback, _1, &is_occupied));
     ros::Subscriber deny_sub = nh.subscribe<iusc_maze::Deny>("/deny", 10, boost::bind(&deny_callback, _1, &maze_vector, &replan));
 

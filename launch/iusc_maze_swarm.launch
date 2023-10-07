@@ -1,17 +1,21 @@
 <launch>
-	<param name="sim_map_id" type="int" value="4"/>
+	<param name="sim_map_id" type="int" value="3"/>
+	<!--交汇路口安全距离/-->
+	<param name="mtg_dist" type="double" value="2.0"/>
+	<!--前方安全距离/-->
+	<param name="flw_dist" type="double" value="1.6"/>
 
 	<node name = "uav0" pkg="iusc_maze" type="iusc_maze_node" output="log">
 		<param name="initial_x" type="double" value="-1.0"/>
 		<param name="initial_y" type="double" value="22.5"/>
 		<param name="uav_id" type="int" value="0"/>
 	</node>
-	<node name = "uav1" pkg="iusc_maze" type="iusc_maze_node" output="screen">
+	<node name = "uav1" pkg="iusc_maze" type="iusc_maze_node" output="log">
 		<param name="initial_x" type="double" value="-1.0"/>
 		<param name="initial_y" type="double" value="15.0"/>
 		<param name="uav_id" type="int" value="1"/>
 	</node>
-	<node name = "uav2" pkg="iusc_maze" type="iusc_maze_node" output="screen">
+	<node name = "uav2" pkg="iusc_maze" type="iusc_maze_node" output="log">
 		<param name="initial_x" type="double" value="-1.0"/>
 		<param name="initial_y" type="double" value="7.5"/>
 		<param name="uav_id" type="int" value="2"/>
@@ -26,7 +30,7 @@
 		<param name="initial_y" type="double" value="15.0"/>
 		<param name="uav_id" type="int" value="4"/>
 	</node>
-	<node name = "uav5" pkg="iusc_maze" type="iusc_maze_node" output="log">
+	<node name = "uav5" pkg="iusc_maze" type="iusc_maze_node" output="screen">
 		<param name="initial_x" type="double" value="-3.0"/>
 		<param name="initial_y" type="double" value="7.5"/>
 		<param name="uav_id" type="int" value="5"/>
