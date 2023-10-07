@@ -514,8 +514,12 @@ int main(int argc, char **argv) {
     end_dst.uav_id = drone.uav_id;
     end_dst.dst_id = end_id;
     dst_pub.publish(end_dst);
-
+    
+    drone.merged_path.clear();
     drone.set_target_pos(end_id, maze_template);
+    scheme.src_id = drone.cur_node_id;
+    scheme.dst_id = drone.next_node();
+    scheme_pub.publish(scheme);
 
     /* 理想状态 */
     while(!drone.is_reached())
