@@ -371,7 +371,11 @@ int main(int argc, char **argv) {
 
             /* 理想状态 */
             while(!drone.is_reached())
-            {
+            {        
+                // 更新无人机状态信息
+                // 需要补充一个回调函数，更新cur_x，cur_y
+
+                
                 swarm.x = drone.cur_x;
                 swarm.y = drone.cur_y;
                 swarm_pub.publish(swarm);
@@ -394,27 +398,30 @@ int main(int argc, char **argv) {
                     break;
                 }
 
-                // 机间避碰协调                
+                // 机间避碰协调
                 if(coordinate(drone, swarm_scheme, swarm_info, maze_template))
                 {
+                    // 悬停
                     drone.dsr_vel = 0;
                 }
                 else
                 {
+                    // 运动
                     drone.dsr_vel = 2.0;
                 }
                 
-
-                // 仿真中的动力学
+                // 仿真中的动力学，实际应当被注释
                 drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*0.02;
                 drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*0.02;
+                
+                // 这里发布速度信息给控制器
 
-                // 发布位置
+                // 发布位置用于可视化
                 drone_pose.header.stamp = ros::Time::now();
                 drone_pose.pose.position.x = drone.cur_x;
                 drone_pose.pose.position.y = drone.cur_y;
-                
-                // 发布姿态
+
+                // 发布姿态用于可视化
                 tf::Quaternion q;
                 q.setRPY(0, 0, drone.dsr_yaw);
                 drone_pose.pose.orientation.x = q.x();
@@ -422,7 +429,8 @@ int main(int argc, char **argv) {
                 drone_pose.pose.orientation.z = q.z();
                 drone_pose.pose.orientation.w = q.w();
                 pos_pub.publish(drone_pose);
-                
+
+                // 控制发布信息的频率
                 loop_rate.sleep();
             }
 
@@ -513,7 +521,7 @@ int main(int argc, char **argv) {
         // 更新swarm_info和swarm_scheme
         ros::spinOnce();
 
-        // 机间避碰协调
+        // 飞向终点没有避碰协调
         drone.dsr_vel = 2.0;
         
         // 仿真中的动力学
