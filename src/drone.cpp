@@ -125,6 +125,7 @@ int Drone::is_reached(double x, double y)
 
 bool Drone::is_next_node_reachable()
 {
+    // 如果前方距离大于一定阈值，则认为下一节点可达
     return true;
 }
 

@@ -22,6 +22,7 @@ const double offset_y = 242.5-400.34;
 const double scale = 0.1;
 double mtg_dist = 1.6;
 double flw_dist = 1.6;
+double dsr_vel = 2.0;
 
 int main_init(Map &maze_template, vector<Map> &maze_vector, vector<Node> &end_node_vector)
 {
@@ -223,7 +224,6 @@ int main(int argc, char **argv) {
     ros::Publisher deny_pub = nh.advertise<iusc_maze::Deny>("/deny", 10, true);
 
     ros::Rate loop_rate(50);
-
     std::cout << "Maze Solver Launch!!" << std::endl;
     
     vector<Map> maze_vector;
@@ -259,6 +259,7 @@ int main(int argc, char **argv) {
     nh.getParam("/sim_map_id", sim_map_id);
     nh.getParam("/mtg_dist", mtg_dist);
     nh.getParam("/flw_dist", flw_dist);
+    nh.getParam("/dsr_vel", dsr_vel);
 
     // drone位置的初始化
     Drone drone(x0, y0, uav_id);
@@ -327,12 +328,12 @@ int main(int argc, char **argv) {
         else
         {
             // 运动
-            drone.dsr_vel = 2.0;
+            drone.dsr_vel = dsr_vel;
         }
         
         // 仿真中的动力学，实际应当被注释
-        drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*0.02;
-        drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*0.02;
+        drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+        drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
         
         // 这里发布速度信息给控制器
 
@@ -364,20 +365,20 @@ int main(int argc, char **argv) {
     // 如果规划的路径存在下一个节点
     while(drone.next_node() != -1)
     {
-        // 当无人机到达下一节点附近时，判断下一节点是否可达
+        // 调整航向角判断下一节点是否可达
 
 
         // 判断下一节点是否可达
         if(drone.is_next_node_reachable(maze_vector.at(sim_map_id)))
         {
+            // 无人机前往下一节点附近
             drone.set_target_pos(drone.next_node(), maze_template);
             scheme.src_id = drone.cur_node_id;
             scheme.dst_id = drone.next_node();
             scheme_pub.publish(scheme);
 
-            /* 理想状态 */
             while(!drone.is_reached())
-            {        
+            {
                 // 更新无人机状态信息
                 // 需要补充一个回调函数，更新cur_x，cur_y
 
@@ -386,7 +387,7 @@ int main(int argc, char **argv) {
                 swarm.y = drone.cur_y;
                 swarm_pub.publish(swarm);
 
-                // 更新swarm_info和swarm_scheme
+                // 更新swarm_info和swarm_scheme，以及目标点不可达的replan信息
                 ros::spinOnce();
 
                 // 重规划
@@ -394,6 +395,7 @@ int main(int argc, char **argv) {
                 {
                     int before = drone.next_node();
                     drone.plan(maze_vector, drone.cur_node_id, dst);
+                    // 重新规划后的下一节点发生变化，则以下一个节点为起点重新规划，避免旧路径终点和新路径起点不连续
                     if(before != drone.next_node())
                     {
                         drone.cur_node_id = before;
@@ -413,12 +415,12 @@ int main(int argc, char **argv) {
                 else
                 {
                     // 运动
-                    drone.dsr_vel = 2.0;
+                    drone.dsr_vel = dsr_vel;
                 }
                 
                 // 仿真中的动力学，实际应当被注释
-                drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*0.02;
-                drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*0.02;
+                drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+                drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
                 
                 // 这里发布速度信息给控制器
 
@@ -440,8 +442,7 @@ int main(int argc, char **argv) {
                 loop_rate.sleep();
             }
 
-            // 实际
-            // while(!drone.is_reached()) ros::spinOnce();
+            // 跳出循环可能原因：1、规划路径改变；2、到达下一节点
             if(replan)
             {
                 replan = 0;
@@ -532,11 +533,11 @@ int main(int argc, char **argv) {
         ros::spinOnce();
 
         // 飞向终点没有避碰协调
-        drone.dsr_vel = 2.0;
+        drone.dsr_vel = dsr_vel;
         
         // 仿真中的动力学
-        drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*0.02;
-        drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*0.02;
+        drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+        drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
 
         // 发布位置用于可视化
         drone_pose.header.stamp = ros::Time::now();

@@ -4,6 +4,10 @@
 	<param name="mtg_dist" type="double" value="2.0"/>
 	<!--前方安全距离/-->
 	<param name="flw_dist" type="double" value="1.6"/>
+	<!--激光安全距离/-->
+	<param name="laser_dist" type="double" value="2.0"/>
+	<!--飞行速度/-->
+	<param name="dsr_vel" type="double" value="10.0"/>
 
 	<node name = "uav0" pkg="iusc_maze" type="iusc_maze_node" output="log">
 		<param name="initial_x" type="double" value="-1.0"/>
