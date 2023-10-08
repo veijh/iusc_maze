@@ -18,6 +18,8 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 find_package(Boost REQUIRED COMPONENTS system)
+find_package(cmake_modules REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -127,7 +129,10 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
 )
+
+add_definitions(${EIGEN_DEFINITIONS})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -145,7 +150,14 @@ include_directories(
 add_executable(${PROJECT_NAME}_node
   src/main.cpp
   src/maze_map.cpp
-  src/drone.cpp)
+  src/drone.cpp
+  src/gps_coord_tf.cpp)
+
+add_executable(${PROJECT_NAME}_test
+src/test.cpp
+src/maze_map.cpp
+src/drone.cpp
+src/gps_coord_tf.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -159,6 +171,11 @@ add_executable(${PROJECT_NAME}_node
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
+)
+
+target_link_libraries(${PROJECT_NAME}_test
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
 )
