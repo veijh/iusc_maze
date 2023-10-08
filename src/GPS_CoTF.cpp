@@ -1,6 +1,6 @@
-#include "gps_coord_tf.h"
+#include "GPS_CoTF.h"
 
-GPS_COORD_TF::GPS_COORD_TF(const double &_ENU_head_deg, const Eigen::Vector2d &ENU_LALO, const vector<Eigen::Vector2d> &MSN_LALO, const vector<Eigen::Vector2d> &MSN_XY)
+GPS_CoTF::GPS_CoTF(const double &_ENU_head_deg, const Eigen::Vector2d &ENU_LALO, const vector<Eigen::Vector2d> &MSN_LALO, const vector<Eigen::Vector2d> &MSN_XY)
 {
   ENU_head_rad = _ENU_head_deg*PAI/180.0;
   std::array<double, 2> delta_EN;
@@ -27,12 +27,9 @@ GPS_COORD_TF::GPS_COORD_TF(const double &_ENU_head_deg, const Eigen::Vector2d &E
     y(2*i) = delta_EN[0];
     y(2*i+1) = delta_EN[1];
   }
-  // cout << "H_matrix:" << endl << H_mat << endl;
   Eigen::Vector4d est = (H_mat.transpose()*H_mat).inverse()*H_mat.transpose()*y;
 
-  // cout << "cos sin x y:" << endl << est << endl;
   MSN_head_rad = atan2(est(1), est(0));
-  // cout << "theta = " << MSN_head_rad*180/PAI << endl;
 
   MSN_to_GPS_offset(0) = est(2);
   MSN_to_GPS_offset(1) = est(3);
@@ -41,14 +38,14 @@ GPS_COORD_TF::GPS_COORD_TF(const double &_ENU_head_deg, const Eigen::Vector2d &E
   ENU_ref_GPS << cos(ENU_head_rad), -sin(ENU_head_rad), sin(ENU_head_rad), cos(ENU_head_rad);
 }
 
-Eigen::Vector2d GPS_COORD_TF::MSN_to_ENU(const Eigen::Vector2d &MSN_XY)
+Eigen::Vector2d GPS_CoTF::MSN_to_ENU(const Eigen::Vector2d &MSN_XY)
 {
   Eigen::Vector2d ENU_XY(0.0, 0.0);
   ENU_XY = ENU_ref_GPS.inverse()*MSN_ref_GPS*MSN_XY+ENU_ref_GPS.inverse()*MSN_to_GPS_offset;
   return ENU_XY;
 }
 
-Eigen::Vector2d GPS_COORD_TF::MSN_to_ENU(const double &MSN_X, const double &MSN_Y)
+Eigen::Vector2d GPS_CoTF::MSN_to_ENU(const double &MSN_X, const double &MSN_Y)
 {
   Eigen::Vector2d ENU_XY(0.0, 0.0);
   Eigen::Vector2d MSN_XY(MSN_X, MSN_Y);
@@ -56,7 +53,7 @@ Eigen::Vector2d GPS_COORD_TF::MSN_to_ENU(const double &MSN_X, const double &MSN_
   return ENU_XY;
 }
 
-void GPS_COORD_TF::MSN_to_ENU(const double &MSN_X, const double &MSN_Y, double &ENU_X, double &ENU_Y)
+void GPS_CoTF::MSN_to_ENU(const double &MSN_X, const double &MSN_Y, double &ENU_X, double &ENU_Y)
 {
   Eigen::Vector2d ENU_XY(0.0, 0.0);
   Eigen::Vector2d MSN_XY(MSN_X, MSN_Y);
@@ -66,14 +63,14 @@ void GPS_COORD_TF::MSN_to_ENU(const double &MSN_X, const double &MSN_Y, double &
   return;
 }
 
-Eigen::Vector2d GPS_COORD_TF::ENU_to_MSN(const Eigen::Vector2d &ENU_XY)
+Eigen::Vector2d GPS_CoTF::ENU_to_MSN(const Eigen::Vector2d &ENU_XY)
 {
   Eigen::Vector2d MSN_XY(0.0, 0.0);
   MSN_XY = MSN_ref_GPS.inverse()*ENU_ref_GPS*(ENU_XY - ENU_ref_GPS.inverse()*MSN_to_GPS_offset);
   return MSN_XY;
 }
 
-Eigen::Vector2d GPS_COORD_TF::ENU_to_MSN(const double &ENU_X, const double &ENU_Y)
+Eigen::Vector2d GPS_CoTF::ENU_to_MSN(const double &ENU_X, const double &ENU_Y)
 {
   Eigen::Vector2d MSN_XY(0.0, 0.0);
   Eigen::Vector2d ENU_XY(ENU_X, ENU_Y);
@@ -81,7 +78,7 @@ Eigen::Vector2d GPS_COORD_TF::ENU_to_MSN(const double &ENU_X, const double &ENU_
   return MSN_XY;
 }
 
-void GPS_COORD_TF::ENU_to_MSN(const double &ENU_X, const double &ENU_Y, double &MSN_X, double &MSN_Y)
+void GPS_CoTF::ENU_to_MSN(const double &ENU_X, const double &ENU_Y, double &MSN_X, double &MSN_Y)
 {
   Eigen::Vector2d MSN_XY(0.0, 0.0);
   Eigen::Vector2d ENU_XY(ENU_X, ENU_Y);

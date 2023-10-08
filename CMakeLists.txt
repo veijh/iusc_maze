@@ -151,13 +151,13 @@ add_executable(${PROJECT_NAME}_node
   src/main.cpp
   src/maze_map.cpp
   src/drone.cpp
-  src/gps_coord_tf.cpp)
+  src/GPS_CoTF.cpp)
 
 add_executable(${PROJECT_NAME}_test
 src/test.cpp
 src/maze_map.cpp
 src/drone.cpp
-src/gps_coord_tf.cpp)
+src/GPS_CoTF.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

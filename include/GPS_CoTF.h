@@ -1,6 +1,6 @@
 /* 该文件实现ENU坐标系和给定任务坐标系之间坐标转换 */
-#ifndef IUSC_MAZE_GPS_COORD_TF_H
-#define IUSC_MAZE_GPS_COORD_TF_H
+#ifndef GPS_COTF_H
+#define GPS_COTF_H
 #include "WGS84toCartesian.hpp"
 #include <iostream>
 #include <vector>
@@ -11,7 +11,7 @@
 
 using namespace std;
 
-class GPS_COORD_TF
+class GPS_CoTF
 {
   private:
   // MSN坐标系相对正北正东的偏移角，逆时针为正方向
@@ -31,7 +31,7 @@ class GPS_COORD_TF
    * MSN_LALO：参考点的纬度和经度
    * MSN_XY：参考点在任务坐标系下的坐标
    */
-    GPS_COORD_TF(const double &_ENU_head_deg=0.0, const Eigen::Vector2d &ENU_LALO, const vector<Eigen::Vector2d> &MSN_LALO, const vector<Eigen::Vector2d> &MSN_XY);
+    GPS_CoTF(const double &_ENU_head_deg, const Eigen::Vector2d &ENU_LALO, const vector<Eigen::Vector2d> &MSN_LALO, const vector<Eigen::Vector2d> &MSN_XY);
   // 任务坐标系坐标 -> ENU坐标系坐标
     Eigen::Vector2d MSN_to_ENU(const Eigen::Vector2d &MSN_XY);
     Eigen::Vector2d MSN_to_ENU(const double &MSN_X, const double &MSN_Y);

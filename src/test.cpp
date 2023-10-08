@@ -1,6 +1,6 @@
 #include <iostream>
 // #include "maze_map.h"
-#include "gps_coord_tf.h"
+#include "GPS_CoTF.h"
 
 using namespace std;
 int main() {
@@ -41,7 +41,7 @@ int main() {
     MSN_LALO.push_back(Eigen::Vector2d(39.955142, 116.263495));
     MSN_XY.push_back(Eigen::Vector2d(20.0, 0.0));
 
-    GPS_COORD_TF frame_tfer(5.0, ENU_LALO, MSN_LALO, MSN_XY);
+    GPS_CoTF frame_tfer(5.0, ENU_LALO, MSN_LALO, MSN_XY);
     cout << "test 1: " << endl << frame_tfer.MSN_to_ENU(0.0, 0.0) << endl;
     return 0;
 }
