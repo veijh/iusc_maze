@@ -40,19 +40,5 @@ class GPS_COORD_TF
     Eigen::Vector2d ENU_to_MSN(const Eigen::Vector2d &ENU_XY);
     Eigen::Vector2d ENU_to_MSN(const double &ENU_X, const double &ENU_Y);
     void ENU_to_MSN(const double &ENU_X, const double &ENU_Y, double &MSN_X, double &MSN_Y);
-
-    /* 
-      abort
-    /*
-    Eigen::Vector2d MSN_to_ENU(double &offset_x, double &offset_y,
-                        const double &msn_lat, const double &msn_lon, const double &msn_x, const double &msn_y,
-                        const double &enu_lat, const double &enu_lon, const double &enu_x = 0.0, const double &enu_y = 0.0)
-    {
-      std::array<double, 2> delta_EN;
-      delta_EN = wgs84::toCartesian({msn_lat, msn_lon}, {enu_lat, enu_lon});
-      offset_x = enu_x - delta_EN[0] - msn_x;
-      offset_y = enu_y - delta_EN[1] - msn_y;
-    }
-    */
 };
 #endif

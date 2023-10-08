@@ -27,12 +27,12 @@ GPS_COORD_TF::GPS_COORD_TF(const double &_ENU_head_deg, const Eigen::Vector2d &E
     y(2*i) = delta_EN[0];
     y(2*i+1) = delta_EN[1];
   }
-  cout << "H_matrix:" << endl << H_mat << endl;
+  // cout << "H_matrix:" << endl << H_mat << endl;
   Eigen::Vector4d est = (H_mat.transpose()*H_mat).inverse()*H_mat.transpose()*y;
 
-  cout << "cos sin x y:" << endl << est << endl;
+  // cout << "cos sin x y:" << endl << est << endl;
   MSN_head_rad = atan2(est(1), est(0));
-  cout << "theta = " << MSN_head_rad*180/PAI << endl;
+  // cout << "theta = " << MSN_head_rad*180/PAI << endl;
 
   MSN_to_GPS_offset(0) = est(2);
   MSN_to_GPS_offset(1) = est(3);
