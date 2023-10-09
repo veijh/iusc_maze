@@ -31,6 +31,7 @@ string file_path;
 
 int main_init(Map &maze_template, vector<Map> &maze_vector, vector<Node> &end_node_vector)
 {
+    cout << file_path << endl;
     // 从文件中读取maze拓扑
     FILE *maze_topo = fopen((file_path+"/maze_topo.csv").data(), "r");
     FILE *var = fopen((file_path+"/var.csv").data(), "r");
@@ -238,7 +239,7 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "iusc_maze");
     ros::NodeHandle nh("");
     
-    nh.param("file_path", file_path);
+    nh.getParam("file_path", file_path);
     // 规划路径：rviz可视化
     ros::Publisher path_pub = nh.advertise<nav_msgs::Path>("planned_path", 1, true);
     nav_msgs::Path planned_path;
