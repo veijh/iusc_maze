@@ -9,6 +9,7 @@
 	<param name="laser_dist" type="double" value="2.0"/>
 	<!--飞行速度/-->
 	<param name="dsr_vel" type="double" value="1.0"/>
+	<rosparam command="load" file="$(find iusc_maze)/cfg/GPS_LALO.yaml">
 
 	<node name = "uav1" pkg="iusc_maze" type="iusc_maze_node" output="log">
 		<param name="initial_x" type="double" value="-1.0"/>

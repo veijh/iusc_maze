@@ -8,6 +8,7 @@
 #include <cstring>
 #include <cstdio>
 #include <nav_msgs/Path.h>
+#include <sensor_msgs/NavSatFix.h>
 #include <tf/tf.h>
 #include "iusc_maze/Scheme.h"
 #include "iusc_maze/Swarm.h"
@@ -249,16 +250,23 @@ int main(int argc, char **argv) {
     
     // 坐标转换
     Eigen::Vector2d ENU_LALO(39.955225, 116.263203);
+
     vector<Eigen::Vector2d> MSN_LALO;
     vector<Eigen::Vector2d> MSN_XY;
-    MSN_LALO.push_back(Eigen::Vector2d(39.955166, 116.263271));
-    MSN_XY.push_back(Eigen::Vector2d(0.0, 0.0));
-    MSN_LALO.push_back(Eigen::Vector2d(39.955336, 116.263293));
-    MSN_XY.push_back(Eigen::Vector2d(0.0, 20.0));
-    MSN_LALO.push_back(Eigen::Vector2d(39.955315, 116.263518));
-    MSN_XY.push_back(Eigen::Vector2d(20.0, 20.0));
-    MSN_LALO.push_back(Eigen::Vector2d(39.955142, 116.263495));
-    MSN_XY.push_back(Eigen::Vector2d(20.0, 0.0));
+    int point_num = 0;
+    nh.getParam("/point_num", point_num);
+
+    for(int i = 0; i< point_num; i++)
+    {
+        double lat = 0.0, lon = 0.0;
+        double x = -1.0, y = -1.0;
+        nh.getParam("/point_"+to_string(i)+"_lat", lat);
+        nh.getParam("/point_"+to_string(i)+"_lon", lon);
+        nh.getParam("/point_"+to_string(i)+"_x", x);
+        nh.getParam("/point_"+to_string(i)+"_y", y);
+        MSN_LALO.push_back(Eigen::Vector2d(lat, lon));
+        MSN_XY.push_back(Eigen::Vector2d(x, y));
+    }
     GPS_CoTF cotf(0.0, ENU_LALO, MSN_LALO, MSN_XY);
 
     //
