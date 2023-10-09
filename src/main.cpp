@@ -236,10 +236,20 @@ int coordinate(Drone &drone, const vector<vector<int>> &swarm_scheme, const vect
 int main(int argc, char **argv) {
     ros::init(argc, argv, "iusc_maze");
     ros::NodeHandle nh("~");
+    
+    // 规划路径：rviz可视化
     ros::Publisher path_pub = nh.advertise<nav_msgs::Path>("planned_path", 1, true);
+    nav_msgs::Path planned_path;
+    // 当前位置：rviz可视化
     ros::Publisher pos_pub = nh.advertise<geometry_msgs::PoseStamped>("cur_pose", 1, true);
+    geometry_msgs::PoseStamped drone_pose;
+    drone_pose.header.frame_id = "msn";
+    drone_pose.header.stamp = ros::Time::now();
     // 航点发布
     ros::Publisher waypoint_pub = nh.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10, true);
+    geometry_msgs::PoseStamped dsr_pose;
+    dsr_pose.header.frame_id = "world";
+    dsr_pose.header.stamp = ros::Time::now();
 
     // 多机通信
     // set_target_pos后发布路径方案
@@ -290,22 +300,14 @@ int main(int argc, char **argv) {
         MSN_LALO.push_back(Eigen::Vector2d(lat, lon));
         MSN_XY.push_back(Eigen::Vector2d(x, y));
     }
+    // 初始化坐标转换器
     GPS_CoTF cotf(0.0, ENU_LALO, MSN_LALO, MSN_XY);
 
-    //
+    // 起点和终点节点号
     vector<int> src = {0,1,2};
     vector<int> dst = {3,4,5};
     vector<int> path;
 
-    geometry_msgs::PoseStamped drone_pose;
-    drone_pose.header.frame_id = "msn";
-    drone_pose.header.stamp = ros::Time::now();
-
-    geometry_msgs::PoseStamped dsr_pose;
-    dsr_pose.header.frame_id = "world";
-    dsr_pose.header.stamp = ros::Time::now();
-
-    nav_msgs::Path planned_path;
 
     iusc_maze::Scheme scheme;
     iusc_maze::Swarm swarm;
