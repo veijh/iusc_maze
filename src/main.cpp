@@ -27,13 +27,14 @@ double flw_dist = 1.6;
 double dsr_vel = 2.0;
 bool init_done = false;
 bool gps_init_done = false;
+string file_path;
 
 int main_init(Map &maze_template, vector<Map> &maze_vector, vector<Node> &end_node_vector)
 {
     // 从文件中读取maze拓扑
-    FILE *maze_topo = fopen("/home/wjh/catkin_ws/src/iusc_maze/maze_topo.csv", "r");
-    FILE *var = fopen("/home/wjh/catkin_ws/src/iusc_maze/var.csv", "r");
-    FILE *end = fopen("/home/wjh/catkin_ws/src/iusc_maze/end.csv", "r");
+    FILE *maze_topo = fopen((file_path+"maze_topo.csv").data(), "r");
+    FILE *var = fopen((file_path+"var.csv").data(), "r");
+    FILE *end = fopen((file_path+"end.csv").data(), "r");
 
     if(maze_topo == NULL) {
         cout << "fail to open file maze_topo" << endl;
@@ -173,12 +174,12 @@ void deny_callback(const iusc_maze::Deny::ConstPtr &deny, vector<Map> *maze_vect
 // 订阅mavros位姿信息
 void pos_callback(const geometry_msgs::PoseStamped::ConstPtr &pos, Drone *drone, GPS_CoTF *cotf)
 {
-    if(!init_done) 
+    cotf->ENU_to_MSN(pos->pose.position.x, pos->pose.position.y, drone->cur_x, drone->cur_y);
+    if(!init_done)
     {
         init_done = true;
-        cout << "uav " << (drone->uav_id+1) <<  " pos init done" << endl;
+        cout << "uav " << (drone->uav_id+1) <<  " msn pos init done" << endl;
     }
-    cotf->ENU_to_MSN(pos->pose.position.x, pos->pose.position.y, drone->cur_x, drone->cur_y);
 }
 
 // 订阅初始时刻GPS经纬度
@@ -235,8 +236,9 @@ int coordinate(Drone &drone, const vector<vector<int>> &swarm_scheme, const vect
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "iusc_maze");
-    ros::NodeHandle nh("~");
+    ros::NodeHandle nh("");
     
+    nh.param("file_path", file_path);
     // 规划路径：rviz可视化
     ros::Publisher path_pub = nh.advertise<nav_msgs::Path>("planned_path", 1, true);
     nav_msgs::Path planned_path;
@@ -248,7 +250,7 @@ int main(int argc, char **argv) {
     // 航点发布
     ros::Publisher waypoint_pub = nh.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10, true);
     geometry_msgs::PoseStamped dsr_pose;
-    dsr_pose.header.frame_id = "world";
+    dsr_pose.header.frame_id = "map";
     dsr_pose.header.stamp = ros::Time::now();
 
     // 多机通信
@@ -262,7 +264,8 @@ int main(int argc, char **argv) {
     ros::Publisher deny_pub = nh.advertise<iusc_maze::Deny>("/deny", 10, true);
 
     ros::Rate loop_rate(50);
-    std::cout << "Maze Solver Launch!!" << std::endl;
+    ros::Duration(20).sleep();
+    std::cout << "----Maze Solver Launch!!----" << std::endl;
     
     vector<Map> maze_vector;
     Map maze_template(real_node_num);
@@ -273,12 +276,13 @@ int main(int argc, char **argv) {
     // 读取初始位置的经纬度
     double init_lat = 0.0, init_lon = 0.0;
     ros::Subscriber lalo_sub = nh.subscribe<sensor_msgs::NavSatFix>("mavros/global_position/global", 1, boost::bind(&lalo_callback, _1, &init_lat, &init_lon));
+    cout << "----Waiting GPS----" << endl;
     while(!gps_init_done)
     {
         loop_rate.sleep();
         ros::spinOnce();
     }
-    cout << "gps init done!!" << endl;
+    cout << "----gps init done!!----" << endl;
     cout << "lat: " << init_lat << ", lon: " << init_lon << endl;
     lalo_sub.shutdown();
 
@@ -287,27 +291,28 @@ int main(int argc, char **argv) {
     vector<Eigen::Vector2d> MSN_LALO;
     vector<Eigen::Vector2d> MSN_XY;
     int point_num = 0;
-    nh.getParam("/point_num", point_num);
+    nh.getParam("point_num", point_num);
+    cout << "point_num = " << point_num << endl;
 
     for(int i = 0; i< point_num; i++)
     {
         double lat = 0.0, lon = 0.0;
         double x = -1.0, y = -1.0;
-        nh.getParam("/point_"+to_string(i)+"_lat", lat);
-        nh.getParam("/point_"+to_string(i)+"_lon", lon);
-        nh.getParam("/point_"+to_string(i)+"_x", x);
-        nh.getParam("/point_"+to_string(i)+"_y", y);
+        nh.getParam("point_"+to_string(i)+"_lat", lat);
+        nh.getParam("point_"+to_string(i)+"_lon", lon);
+        nh.getParam("point_"+to_string(i)+"_x", x);
+        nh.getParam("point_"+to_string(i)+"_y", y);
         MSN_LALO.push_back(Eigen::Vector2d(lat, lon));
         MSN_XY.push_back(Eigen::Vector2d(x, y));
+        cout << "lat = " << lat << ", lon = " << lon << ", x = " << x << ", y = " << y << endl;
     }
     // 初始化坐标转换器
     GPS_CoTF cotf(0.0, ENU_LALO, MSN_LALO, MSN_XY);
+    cout << "----gps cotf init done!!----" << endl;
 
     // 起点和终点节点号
     vector<int> src = {0,1,2};
     vector<int> dst = {3,4,5};
-    vector<int> path;
-
 
     iusc_maze::Scheme scheme;
     iusc_maze::Swarm swarm;
@@ -322,10 +327,10 @@ int main(int argc, char **argv) {
     nh.getParam("initial_x", x0);
     nh.getParam("initial_y", y0);
     nh.getParam("uav_id", uav_id);
-    nh.getParam("/sim_map_id", sim_map_id);
-    nh.getParam("/mtg_dist", mtg_dist);
-    nh.getParam("/flw_dist", flw_dist);
-    nh.getParam("/dsr_vel", dsr_vel);
+    nh.getParam("sim_map_id", sim_map_id);
+    nh.getParam("mtg_dist", mtg_dist);
+    nh.getParam("flw_dist", flw_dist);
+    nh.getParam("dsr_vel", dsr_vel);
 
     // drone位置的初始化
     Drone drone(x0, y0, uav_id);
@@ -355,12 +360,14 @@ int main(int argc, char **argv) {
     ros::Subscriber deny_sub = nh.subscribe<iusc_maze::Deny>("/deny", 10, boost::bind(&deny_callback, _1, &maze_vector, &replan));
     ros::Subscriber pos_sub = nh.subscribe<geometry_msgs::PoseStamped>("mavros/local_position/pose", 1, boost::bind(&pos_callback, _1, &drone, &cotf));
 
+    cout << "----Reading initial local position----" << endl;
     // 更新初始位姿信息
     while(!init_done) 
     {
         loop_rate.sleep();
         ros::spinOnce();
     }
+    cout << drone.cur_x << ", " << drone.cur_y << endl;
 
     // 飞向最近的起点
     double min_dis = 999.0;
@@ -385,6 +392,7 @@ int main(int argc, char **argv) {
     dsr_pose.pose.position.x = enu_pos.x();
     dsr_pose.pose.position.y = enu_pos.y();
     dsr_pose.pose.position.z = 2.0;
+    dsr_pose.pose.orientation.w = 1.0;
     waypoint_pub.publish(dsr_pose);
 
     scheme.dst_id = start_id;
@@ -464,6 +472,7 @@ int main(int argc, char **argv) {
             dsr_pose.pose.position.x = enu_pos.x();
             dsr_pose.pose.position.y = enu_pos.y();
             dsr_pose.pose.position.z = 2.0;
+            dsr_pose.pose.orientation.w = 1.0;
             waypoint_pub.publish(dsr_pose);
 
             scheme.src_id = drone.cur_node_id;
@@ -618,6 +627,7 @@ int main(int argc, char **argv) {
     dsr_pose.pose.position.x = enu_pos.x();
     dsr_pose.pose.position.y = enu_pos.y();
     dsr_pose.pose.position.z = 2.0;
+    dsr_pose.pose.orientation.w = 1.0;
     waypoint_pub.publish(dsr_pose);
 
     scheme.src_id = drone.cur_node_id;

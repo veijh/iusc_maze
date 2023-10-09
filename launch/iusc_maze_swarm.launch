@@ -9,9 +9,15 @@
 	<param name="laser_dist" type="double" value="2.0"/>
 	<!--飞行速度/-->
 	<param name="dsr_vel" type="double" value="1.0"/>
+	<!--参考点坐标-->
 	<rosparam command="load" file="$(find iusc_maze)/cfg/GPS_LALO.yaml"/>
+	<param name="file_path" type="string" value="$(find iusc_maze)"/>
+	<param name="initial_x" type="double" value="-1.0"/>
+	<param name="initial_y" type="double" value="22.5"/>
+	<param name="uav_id" type="int" value="0"/>
+	<node name = "iusc_maze" pkg="iusc_maze" type="iusc_maze_node" output="screen">
 
-	<node name = "uav1" pkg="iusc_maze" type="iusc_maze_node" output="screen">
+	<!-- <node name = "uav1" pkg="iusc_maze" type="iusc_maze_node" output="screen">
 		<param name="initial_x" type="double" value="-1.0"/>
 		<param name="initial_y" type="double" value="22.5"/>
 		<param name="uav_id" type="int" value="0"/>
@@ -40,7 +46,7 @@
 		<param name="initial_x" type="double" value="-3.0"/>
 		<param name="initial_y" type="double" value="7.5"/>
 		<param name="uav_id" type="int" value="5"/>
-	</node>
+	</node> -->
 	
-	<node name = "rviz" pkg="rviz" type="rviz" args="-d $(find iusc_maze)/rviz.rviz" required="true"/>
+	<!-- <node name = "rviz" pkg="rviz" type="rviz" args="-d $(find iusc_maze)/rviz.rviz" required="true"/> -->
 </launch>

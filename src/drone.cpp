@@ -85,7 +85,7 @@ void Drone::set_target_pos(int id, Map &map)
     dsr_x = map.node.at(id).x;
     dsr_y = map.node.at(id).y;
     dsr_yaw = atan2(dsr_y-cur_y, dsr_x-cur_x);
-    cout << id << endl;
+    cout << id << ": (" << dsr_x << ", " << dsr_y << ")" << endl;
     // 直线飞行
     if(merged_path.empty())
     {
