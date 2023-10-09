@@ -26,6 +26,7 @@ double mtg_dist = 1.6;
 double flw_dist = 1.6;
 double dsr_vel = 2.0;
 bool init_done = false;
+bool gps_init_done = false;
 
 int main_init(Map &maze_template, vector<Map> &maze_vector, vector<Node> &end_node_vector)
 {
@@ -108,7 +109,7 @@ int main_init(Map &maze_template, vector<Map> &maze_vector, vector<Node> &end_no
 // 将merge_path转换为ros下的path，用于可视化
 void path_to_ros(vector<int> &path, nav_msgs::Path &ros_path, Map &maze_template)
 {
-    ros_path.header.frame_id = "world";
+    ros_path.header.frame_id = "msn";
     ros_path.header.stamp = ros::Time::now();
     ros_path.poses.clear();
     for(auto &node:path)
@@ -180,6 +181,17 @@ void pos_callback(const geometry_msgs::PoseStamped::ConstPtr &pos, Drone *drone,
     cotf->ENU_to_MSN(pos->pose.position.x, pos->pose.position.y, drone->cur_x, drone->cur_y);
 }
 
+// 订阅初始时刻GPS经纬度
+void lalo_callback(const sensor_msgs::NavSatFix::ConstPtr &lalo, double *lat, double *lon)
+{
+    *lat = lalo->latitude;
+    *lon = lalo->longitude;
+    if(!gps_init_done)
+    {
+        gps_init_done = true;
+    }
+}
+
 // 多机协调
 int coordinate(Drone &drone, const vector<vector<int>> &swarm_scheme, const vector<vector<double>> &swarm_info, Map &maze_template)
 {
@@ -248,9 +260,20 @@ int main(int argc, char **argv) {
 
     if(main_init(maze_template, maze_vector, end_node_vector)) return 0;
     
-    // 坐标转换
-    Eigen::Vector2d ENU_LALO(39.955225, 116.263203);
+    // 读取初始位置的经纬度
+    double init_lat = 0.0, init_lon = 0.0;
+    ros::Subscriber lalo_sub = nh.subscribe<sensor_msgs::NavSatFix>("mavros/global_position/global", 1, boost::bind(&lalo_callback, _1, &init_lat, &init_lon));
+    while(!gps_init_done)
+    {
+        loop_rate.sleep();
+        ros::spinOnce();
+    }
+    cout << "gps init done!!" << endl;
+    cout << "lat: " << init_lat << ", lon: " << init_lon << endl;
+    lalo_sub.shutdown();
 
+    // 坐标转换
+    Eigen::Vector2d ENU_LALO(init_lat, init_lon);
     vector<Eigen::Vector2d> MSN_LALO;
     vector<Eigen::Vector2d> MSN_XY;
     int point_num = 0;
@@ -275,7 +298,7 @@ int main(int argc, char **argv) {
     vector<int> path;
 
     geometry_msgs::PoseStamped drone_pose;
-    drone_pose.header.frame_id = "world";
+    drone_pose.header.frame_id = "msn";
     drone_pose.header.stamp = ros::Time::now();
 
     geometry_msgs::PoseStamped dsr_pose;
