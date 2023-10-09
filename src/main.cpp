@@ -32,9 +32,9 @@ string file_path;
 int main_init(Map &maze_template, vector<Map> &maze_vector, vector<Node> &end_node_vector)
 {
     // 从文件中读取maze拓扑
-    FILE *maze_topo = fopen((file_path+"maze_topo.csv").data(), "r");
-    FILE *var = fopen((file_path+"var.csv").data(), "r");
-    FILE *end = fopen((file_path+"end.csv").data(), "r");
+    FILE *maze_topo = fopen((file_path+"/maze_topo.csv").data(), "r");
+    FILE *var = fopen((file_path+"/var.csv").data(), "r");
+    FILE *end = fopen((file_path+"/end.csv").data(), "r");
 
     if(maze_topo == NULL) {
         cout << "fail to open file maze_topo" << endl;
