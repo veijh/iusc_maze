@@ -16,6 +16,7 @@
 #include "iusc_maze/Dst.h"
 #include <boost/bind.hpp>
 #include "GPS_CoTF.h"
+#include <mavros_msgs/State.h>
 
 using namespace std;
 const int real_node_num = 84;
@@ -28,6 +29,7 @@ double dsr_vel = 2.0;
 bool init_done = false;
 bool gps_init_done = false;
 string file_path;
+mavros_msgs::State current_state;
 
 int main_init(Map &maze_template, vector<Map> &maze_vector, vector<Node> &end_node_vector)
 {
@@ -179,7 +181,6 @@ void pos_callback(const geometry_msgs::PoseStamped::ConstPtr &pos, Drone *drone,
     if(!init_done)
     {
         init_done = true;
-        cout << "uav " << (drone->uav_id+1) <<  " msn pos init done" << endl;
     }
 }
 
@@ -192,6 +193,11 @@ void lalo_callback(const sensor_msgs::NavSatFix::ConstPtr &lalo, double *lat, do
     {
         gps_init_done = true;
     }
+}
+
+// 订阅mavros px4状态
+void px4_callback(const mavros_msgs::State::ConstPtr& msg){
+    current_state = *msg;
 }
 
 // 多机协调
@@ -239,7 +245,12 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "iusc_maze");
     ros::NodeHandle nh("");
     
+    // 读取参数
     nh.getParam("file_path", file_path);
+    nh.getParam("mtg_dist", mtg_dist);
+    nh.getParam("flw_dist", flw_dist);
+    nh.getParam("dsr_vel", dsr_vel);
+
     // 规划路径：rviz可视化
     ros::Publisher path_pub = nh.advertise<nav_msgs::Path>("planned_path", 1, true);
     nav_msgs::Path planned_path;
@@ -257,23 +268,31 @@ int main(int argc, char **argv) {
     // 多机通信
     // set_target_pos后发布路径方案
     ros::Publisher scheme_pub = nh.advertise<iusc_maze::Scheme>("/scheme", 10, true);
+    iusc_maze::Scheme scheme;
     // 动力学计算前发布本机位置
     ros::Publisher swarm_pub = nh.advertise<iusc_maze::Swarm>("/swarm", 10, true);
+    iusc_maze::Swarm swarm;
     // 前往终点前发布
     ros::Publisher dst_pub = nh.advertise<iusc_maze::Dst>("/dst", 10, true);
-    // 方案排除后发布
+    iusc_maze::Dst end_dst;
+    // 不可能的地图，方案排除后发布
     ros::Publisher deny_pub = nh.advertise<iusc_maze::Deny>("/deny", 10, true);
+    iusc_maze::Deny map_denied;
+    map_denied.map_id = -1;
 
     ros::Rate loop_rate(50);
-    ros::Duration(20).sleep();
-    std::cout << "----Maze Solver Launch!!----" << std::endl;
-    
+    std::cout << "----Maze Solver Launch !!----" << std::endl;
+
     vector<Map> maze_vector;
     Map maze_template(real_node_num);
     vector<Node> end_node_vector;
 
     if(main_init(maze_template, maze_vector, end_node_vector)) return 0;
     
+    cout << "----Waiting 10 sec for Data to Stabilize----" << endl;
+    ros::Duration(10).sleep();
+    cout << "----10 sec have passed----" << endl;
+
     // 读取初始位置的经纬度
     double init_lat = 0.0, init_lon = 0.0;
     ros::Subscriber lalo_sub = nh.subscribe<sensor_msgs::NavSatFix>("mavros/global_position/global", 1, boost::bind(&lalo_callback, _1, &init_lat, &init_lon));
@@ -284,7 +303,7 @@ int main(int argc, char **argv) {
         ros::spinOnce();
     }
     cout << "----gps init done!!----" << endl;
-    cout << "lat: " << init_lat << ", lon: " << init_lon << endl;
+    cout << "init_lat: " << init_lat << ", init_lon: " << init_lon << endl;
     lalo_sub.shutdown();
 
     // 坐标转换
@@ -305,9 +324,10 @@ int main(int argc, char **argv) {
         nh.getParam("point_"+to_string(i)+"_y", y);
         MSN_LALO.push_back(Eigen::Vector2d(lat, lon));
         MSN_XY.push_back(Eigen::Vector2d(x, y));
-        cout << "lat = " << lat << ", lon = " << lon << ", x = " << x << ", y = " << y << endl;
+        cout << "\tlat = " << lat << ", lon = " << lon << ", x = " << x << ", y = " << y << endl;
     }
     // 初始化坐标转换器
+    // enu坐标系四元数朝向为正北正东方向，所以参数为0
     GPS_CoTF cotf(0.0, ENU_LALO, MSN_LALO, MSN_XY);
     cout << "----gps cotf init done!!----" << endl;
 
@@ -315,13 +335,6 @@ int main(int argc, char **argv) {
     vector<int> src = {0,1,2};
     vector<int> dst = {3,4,5};
 
-    iusc_maze::Scheme scheme;
-    iusc_maze::Swarm swarm;
-    // 不可能的地图
-    iusc_maze::Deny map_denied;
-    iusc_maze::Dst end_dst;
-
-    map_denied.map_id = -1;
     double x0 = 0.0, y0 = 0.0;
     int uav_id = -1;
     int sim_map_id = -1;
@@ -329,9 +342,6 @@ int main(int argc, char **argv) {
     nh.getParam("initial_y", y0);
     nh.getParam("uav_id", uav_id);
     nh.getParam("sim_map_id", sim_map_id);
-    nh.getParam("mtg_dist", mtg_dist);
-    nh.getParam("flw_dist", flw_dist);
-    nh.getParam("dsr_vel", dsr_vel);
 
     // drone位置的初始化
     Drone drone(x0, y0, uav_id);
@@ -368,8 +378,23 @@ int main(int argc, char **argv) {
         loop_rate.sleep();
         ros::spinOnce();
     }
-    cout << drone.cur_x << ", " << drone.cur_y << endl;
+    cout << "uav " << (drone.uav_id+1) <<  " msn pos init done: (" << drone.cur_x << ", " << drone.cur_y << ")" << endl;
 
+    // 检测是否进入offboard模式
+    cout << "----Waiting for Offboard----" << endl;
+    ros::Subscriber px4_sub = nh.subscribe<mavros_msgs::State>("mavros/state", 10, px4_callback);
+    while(ros::ok())
+    {
+        cout << "UAV current_mode: " << current_state.mode;
+        loop_rate.sleep();
+        cout << "\r\033[k";
+        ros::spinOnce();
+        if(current_state.mode=="OFFBOARD") break;
+    }
+    px4_sub.shutdown();
+    cout << "----UAV ready!!----" << endl;
+
+    cout << "----Fly to Nearest Beginning----" << endl;
     // 飞向最近的起点
     double min_dis = 999.0;
     int start_id = -1;
@@ -393,7 +418,10 @@ int main(int argc, char **argv) {
     dsr_pose.pose.position.x = enu_pos.x();
     dsr_pose.pose.position.y = enu_pos.y();
     dsr_pose.pose.position.z = 2.0;
-    dsr_pose.pose.orientation.w = 1.0;
+    dsr_pose.pose.orientation.w = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).w();
+    dsr_pose.pose.orientation.x = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).x();
+    dsr_pose.pose.orientation.y = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).y();
+    dsr_pose.pose.orientation.z = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).z();
     waypoint_pub.publish(dsr_pose);
 
     scheme.dst_id = start_id;
@@ -473,7 +501,10 @@ int main(int argc, char **argv) {
             dsr_pose.pose.position.x = enu_pos.x();
             dsr_pose.pose.position.y = enu_pos.y();
             dsr_pose.pose.position.z = 2.0;
-            dsr_pose.pose.orientation.w = 1.0;
+            dsr_pose.pose.orientation.w = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).w();
+            dsr_pose.pose.orientation.x = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).x();
+            dsr_pose.pose.orientation.y = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).y();
+            dsr_pose.pose.orientation.z = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).z();
             waypoint_pub.publish(dsr_pose);
 
             scheme.src_id = drone.cur_node_id;
@@ -628,7 +659,10 @@ int main(int argc, char **argv) {
     dsr_pose.pose.position.x = enu_pos.x();
     dsr_pose.pose.position.y = enu_pos.y();
     dsr_pose.pose.position.z = 2.0;
-    dsr_pose.pose.orientation.w = 1.0;
+    dsr_pose.pose.orientation.w = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).w();
+    dsr_pose.pose.orientation.x = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).x();
+    dsr_pose.pose.orientation.y = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).y();
+    dsr_pose.pose.orientation.z = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).z();
     waypoint_pub.publish(dsr_pose);
 
     scheme.src_id = drone.cur_node_id;

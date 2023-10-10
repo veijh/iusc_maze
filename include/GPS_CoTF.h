@@ -36,9 +36,13 @@ class GPS_CoTF
     Eigen::Vector2d MSN_to_ENU(const Eigen::Vector2d &MSN_XY);
     Eigen::Vector2d MSN_to_ENU(const double &MSN_X, const double &MSN_Y);
     void MSN_to_ENU(const double &MSN_X, const double &MSN_Y, double &ENU_X, double &ENU_Y);
+    double MSN_to_ENU_YAW(const double &MSN_YAW_RAD);
+    void MSN_to_ENU_YAW(const double &MSN_YAW_RAD, double &ENU_YAW_RAD);
   // ENU坐标系坐标 -> 任务坐标系坐标
     Eigen::Vector2d ENU_to_MSN(const Eigen::Vector2d &ENU_XY);
     Eigen::Vector2d ENU_to_MSN(const double &ENU_X, const double &ENU_Y);
     void ENU_to_MSN(const double &ENU_X, const double &ENU_Y, double &MSN_X, double &MSN_Y);
+    double ENU_to_MSN_YAW(const double &ENU_YAW_RAD);
+    void ENU_to_MSN_YAW(const double &ENU_YAW_RAD, double &MSN_YAW_RAD);
 };
 #endif
