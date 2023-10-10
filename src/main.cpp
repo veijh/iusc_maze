@@ -17,6 +17,7 @@
 #include <boost/bind.hpp>
 #include "GPS_CoTF.h"
 #include <mavros_msgs/State.h>
+#include <mavros_msgs/AttitudeTarget.h>
 
 using namespace std;
 const int real_node_num = 84;
@@ -265,6 +266,12 @@ int main(int argc, char **argv) {
     dsr_pose.header.frame_id = "map";
     dsr_pose.header.stamp = ros::Time::now();
 
+    // 偏航角发布
+    ros::Publisher att_pub = nh.advertise<mavros_msgs::AttitudeTarget>("mavros/setpoint_raw/attitude", 10, true);
+    mavros_msgs::AttitudeTarget dsr_att;
+    dsr_pose.header.frame_id = "map";
+    dsr_pose.header.stamp = ros::Time::now();
+
     // 多机通信
     // set_target_pos后发布路径方案
     ros::Publisher scheme_pub = nh.advertise<iusc_maze::Scheme>("/scheme", 10, true);
@@ -418,11 +425,12 @@ int main(int argc, char **argv) {
     dsr_pose.pose.position.x = enu_pos.x();
     dsr_pose.pose.position.y = enu_pos.y();
     dsr_pose.pose.position.z = 4.0;
-    dsr_pose.pose.orientation.w = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).w();
-    dsr_pose.pose.orientation.x = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).x();
-    dsr_pose.pose.orientation.y = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).y();
-    dsr_pose.pose.orientation.z = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).z();
+    dsr_att.orientation.w = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).w();
+    dsr_att.orientation.x = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).x();
+    dsr_att.orientation.y = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).y();
+    dsr_att.orientation.z = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).z();
     waypoint_pub.publish(dsr_pose);
+    att_pub.publish(dsr_att);
 
     scheme.dst_id = start_id;
     scheme_pub.publish(scheme);
@@ -501,11 +509,12 @@ int main(int argc, char **argv) {
             dsr_pose.pose.position.x = enu_pos.x();
             dsr_pose.pose.position.y = enu_pos.y();
             dsr_pose.pose.position.z = 4.0;
-            dsr_pose.pose.orientation.w = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).w();
-            dsr_pose.pose.orientation.x = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).x();
-            dsr_pose.pose.orientation.y = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).y();
-            dsr_pose.pose.orientation.z = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).z();
+            dsr_att.orientation.w = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).w();
+            dsr_att.orientation.x = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).x();
+            dsr_att.orientation.y = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).y();
+            dsr_att.orientation.z = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).z();
             waypoint_pub.publish(dsr_pose);
+            att_pub.publish(dsr_att);
 
             scheme.src_id = drone.cur_node_id;
             scheme.dst_id = drone.next_node();
@@ -659,11 +668,12 @@ int main(int argc, char **argv) {
     dsr_pose.pose.position.x = enu_pos.x();
     dsr_pose.pose.position.y = enu_pos.y();
     dsr_pose.pose.position.z = 4.0;
-    dsr_pose.pose.orientation.w = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).w();
-    dsr_pose.pose.orientation.x = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).x();
-    dsr_pose.pose.orientation.y = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).y();
-    dsr_pose.pose.orientation.z = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).z();
+    dsr_att.orientation.w = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).w();
+    dsr_att.orientation.x = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).x();
+    dsr_att.orientation.y = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).y();
+    dsr_att.orientation.z = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).z();
     waypoint_pub.publish(dsr_pose);
+    att_pub.publish(dsr_att);
 
     scheme.src_id = drone.cur_node_id;
     scheme.dst_id = drone.next_node();
