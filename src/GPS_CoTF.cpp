@@ -87,3 +87,21 @@ void GPS_CoTF::ENU_to_MSN(const double &ENU_X, const double &ENU_Y, double &MSN_
   MSN_Y = MSN_XY(1);
   return;
 }
+
+double GPS_CoTF::MSN_to_ENU_YAW(const double &MSN_YAW_RAD)
+{
+  return MSN_YAW_RAD+MSN_head_rad-ENU_head_rad;
+}
+void GPS_CoTF::MSN_to_ENU_YAW(const double &MSN_YAW_RAD, double &ENU_YAW_RAD)
+{
+  ENU_YAW_RAD = MSN_YAW_RAD+MSN_head_rad-ENU_head_rad;
+}
+
+double GPS_CoTF::ENU_to_MSN_YAW(const double &ENU_YAW_RAD)
+{
+  return ENU_YAW_RAD+ENU_head_rad-MSN_head_rad;
+}
+void GPS_CoTF::ENU_to_MSN_YAW(const double &ENU_YAW_RAD, double &MSN_YAW_RAD)
+{
+  MSN_YAW_RAD = ENU_YAW_RAD+ENU_head_rad-MSN_head_rad;
+}
