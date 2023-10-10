@@ -267,6 +267,7 @@ int main(int argc, char **argv) {
     dsr_pose.header.frame_id = "map";
     dsr_pose.header.stamp = ros::Time::now();
     dsr_pose.type_mask = 0b101111111000;
+    dsr_pose.coordinate_frame = 1;
 
     // 多机通信
     // set_target_pos后发布路径方案
