@@ -113,12 +113,12 @@ int Drone::is_reached()
     double dy = cur_y - dsr_y;
     if(dx*dx+dy*dy < dis_th*dis_th)
     {
-        cout << "distance = " << sqrt(dx*dx+dy*dy);
+        cout << endl;
         return 1;
     }
     else 
     {
-        cout << endl;
+        cout << "distance = " << sqrt(dx*dx+dy*dy);
         return 0;
     }
 }

@@ -431,6 +431,7 @@ int main(int argc, char **argv) {
     /* 理想状态 */
     while(!drone.is_reached())
     {
+        waypoint_pub.publish(dsr_pose);
         // 更新无人机状态信息
         // 需要补充一个回调函数，更新cur_x，cur_y
 
