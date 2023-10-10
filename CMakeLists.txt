@@ -65,11 +65,10 @@ add_message_files(
 )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+  map2local.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -160,6 +159,7 @@ src/maze_map.cpp
 src/drone.cpp
 src/GPS_CoTF.cpp)
 
+add_executable(map2local_server src/map2local_srv.cpp src/GPS_CoTF.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -181,6 +181,9 @@ target_link_libraries(${PROJECT_NAME}_test
   ${Boost_LIBRARIES}
 )
 
+target_link_libraries(map2local_server
+        ${catkin_LIBRARIES}
+        ${Boost_LIBRARIES} )
 #############
 ## Install ##
 #############

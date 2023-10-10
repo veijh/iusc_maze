@@ -1,21 +1,21 @@
 point_num: 4
 
-point_0_lat: 39.955166
-point_0_lon: 116.263271
+point_0_lat: 47.3977388
+point_0_lon: 8.5459928
 point_0_x: 0.0
 point_0_y: 0.0
 
-point_1_lat: 39.955336
-point_1_lon: 116.263293
-point_1_x: 0.0
-point_1_y: 20.0
-
-point_1_lat: 39.955315
-point_1_lon: 116.263518
-point_1_x: 20.0
-point_1_y: 20.0
-
-point_1_lat: 39.955142
-point_1_lon: 116.263495
-point_1_x: 20.0
+point_1_lat: 47.3980174
+point_1_lon: 8.5459928
+point_1_x: 30.0
 point_1_y: 0.0
+
+point_2_lat: 47.3980175
+point_2_lon: 8.5455951
+point_2_x: 30.0
+point_2_y: 30.0
+
+point_3_lat: 47.3977426
+point_3_lon: 8.5455947
+point_3_x: 0.0
+point_3_y: 30.0

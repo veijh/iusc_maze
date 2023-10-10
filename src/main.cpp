@@ -392,7 +392,7 @@ int main(int argc, char **argv) {
     dsr_pose.header.stamp = ros::Time::now();
     dsr_pose.pose.position.x = enu_pos.x();
     dsr_pose.pose.position.y = enu_pos.y();
-    dsr_pose.pose.position.z = 2.0;
+    dsr_pose.pose.position.z = 4.0;
     dsr_pose.pose.orientation.w = 1.0;
     waypoint_pub.publish(dsr_pose);
 
@@ -472,7 +472,7 @@ int main(int argc, char **argv) {
             dsr_pose.header.stamp = ros::Time::now();
             dsr_pose.pose.position.x = enu_pos.x();
             dsr_pose.pose.position.y = enu_pos.y();
-            dsr_pose.pose.position.z = 2.0;
+            dsr_pose.pose.position.z = 4.0;
             dsr_pose.pose.orientation.w = 1.0;
             waypoint_pub.publish(dsr_pose);
 
@@ -627,7 +627,7 @@ int main(int argc, char **argv) {
     dsr_pose.header.stamp = ros::Time::now();
     dsr_pose.pose.position.x = enu_pos.x();
     dsr_pose.pose.position.y = enu_pos.y();
-    dsr_pose.pose.position.z = 2.0;
+    dsr_pose.pose.position.z = 4.0;
     dsr_pose.pose.orientation.w = 1.0;
     waypoint_pub.publish(dsr_pose);
 
