@@ -475,6 +475,7 @@ int main(int argc, char **argv) {
 
         // 控制发布信息的频率
         loop_rate.sleep();
+        cout << "\r\033[k";
     }
     // 到达目标后，更新无人机所处节点
     drone.cur_node_id = start_id;
@@ -571,6 +572,7 @@ int main(int argc, char **argv) {
 
                 // 控制发布信息的频率
                 loop_rate.sleep();
+                cout << "\r\033[k";
             }
 
             // 跳出循环可能原因：1、规划路径改变；2、到达下一节点
@@ -695,6 +697,7 @@ int main(int argc, char **argv) {
         drone_pose.pose.orientation.w = q.w();
         pos_pub.publish(drone_pose);
         loop_rate.sleep();
+        cout << "\r\033[k";
     }
     drone.cur_node_id = end_id;
 
