@@ -417,7 +417,7 @@ int main(int argc, char **argv) {
     dsr_pose.header.stamp = ros::Time::now();
     dsr_pose.pose.position.x = enu_pos.x();
     dsr_pose.pose.position.y = enu_pos.y();
-    dsr_pose.pose.position.z = 2.0;
+    dsr_pose.pose.position.z = 4.0;
     dsr_pose.pose.orientation.w = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).w();
     dsr_pose.pose.orientation.x = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).x();
     dsr_pose.pose.orientation.y = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).y();
@@ -500,7 +500,7 @@ int main(int argc, char **argv) {
             dsr_pose.header.stamp = ros::Time::now();
             dsr_pose.pose.position.x = enu_pos.x();
             dsr_pose.pose.position.y = enu_pos.y();
-            dsr_pose.pose.position.z = 2.0;
+            dsr_pose.pose.position.z = 4.0;
             dsr_pose.pose.orientation.w = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).w();
             dsr_pose.pose.orientation.x = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).x();
             dsr_pose.pose.orientation.y = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).y();
@@ -658,7 +658,7 @@ int main(int argc, char **argv) {
     dsr_pose.header.stamp = ros::Time::now();
     dsr_pose.pose.position.x = enu_pos.x();
     dsr_pose.pose.position.y = enu_pos.y();
-    dsr_pose.pose.position.z = 2.0;
+    dsr_pose.pose.position.z = 4.0;
     dsr_pose.pose.orientation.w = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).w();
     dsr_pose.pose.orientation.x = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).x();
     dsr_pose.pose.orientation.y = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).y();

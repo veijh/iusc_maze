@@ -1,0 +1,7 @@
+# 任务坐标系下坐标
+float32 x_map
+float32 y_map
+---
+# local坐标系下坐标
+float32 x_local
+float32 y_local
