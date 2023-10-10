@@ -30,18 +30,18 @@ void lalo_callback(const sensor_msgs::NavSatFix::ConstPtr &lalo, double *lat, do
 
 int main(int argc, char **argv){
 
-    if (argc != 3){
-        ROS_ERROR_ONCE("Wrong number of arguments");
-        return 1;
-    }
+    // if (argc != 3){
+    //     ROS_ERROR_ONCE("Wrong number of arguments");
+    //     return 1;
+    // }
     ros::init(argc, argv,"map2local_server");
     ros::NodeHandle nh;
 
     // 读取初始位置的经纬度
-    ros::Rate loop_rate(10);
+    ros::Rate loop_rate(50);
     double init_lat = 0.0, init_lon = 0.0;
     ros::Subscriber lalo_sub = nh.subscribe<sensor_msgs::NavSatFix>("mavros/global_position/global", 1, boost::bind(&lalo_callback, _1, &init_lat, &init_lon));
-    cout << "----Waiting GPS----" << endl;
+    cout << "----Waiting GPS in map 2 local service----" << endl;
     while(!gps_init_done)
     {
         loop_rate.sleep();
@@ -57,7 +57,7 @@ int main(int argc, char **argv){
     vector<Eigen::Vector2d> MSN_XY;
     int point_num = 0;
     nh.getParam("point_num", point_num);
-    cout << "point_num = " << point_num << endl;
+    cout << "point_num in map 2 local service= " << point_num << endl;
 
     for(int i = 0; i< point_num; i++)
     {
@@ -75,8 +75,7 @@ int main(int argc, char **argv){
     cotf_ptr = new GPS_CoTF(0.0, ENU_LALO, MSN_LALO, MSN_XY);
     //
     ros::ServiceServer server = nh.advertiseService("map2local_server",map2local_cb);
-    ros::service::waitForService("map2local_client");
-    ROS_INFO("map2local server is ready");
+    ROS_INFO(" ---  map2local server is ready --- ");
     ros::spin();
     return 0;
 }
