@@ -17,7 +17,7 @@
 #include <boost/bind.hpp>
 #include "GPS_CoTF.h"
 #include <mavros_msgs/State.h>
-#include <mavros_msgs/AttitudeTarget.h>
+#include <mavros_msgs/PositionTarget.h>
 
 using namespace std;
 const int real_node_num = 84;
@@ -260,17 +260,13 @@ int main(int argc, char **argv) {
     geometry_msgs::PoseStamped drone_pose;
     drone_pose.header.frame_id = "msn";
     drone_pose.header.stamp = ros::Time::now();
-    // 航点发布
-    ros::Publisher waypoint_pub = nh.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10, true);
-    geometry_msgs::PoseStamped dsr_pose;
-    dsr_pose.header.frame_id = "map";
-    dsr_pose.header.stamp = ros::Time::now();
 
-    // 偏航角发布
-    ros::Publisher att_pub = nh.advertise<mavros_msgs::AttitudeTarget>("mavros/setpoint_raw/attitude", 10, true);
-    mavros_msgs::AttitudeTarget dsr_att;
+    // 航点发布
+    ros::Publisher waypoint_pub = nh.advertise<mavros_msgs::PositionTarget>("mavros/setpoint_raw/local", 10, true);
+    mavros_msgs::PositionTarget dsr_pose;
     dsr_pose.header.frame_id = "map";
     dsr_pose.header.stamp = ros::Time::now();
+    dsr_pose.type_mask = 0b101111111000;
 
     // 多机通信
     // set_target_pos后发布路径方案
@@ -422,15 +418,11 @@ int main(int argc, char **argv) {
     Eigen::Vector2d enu_pos(0.0, 0.0);
     enu_pos = cotf.MSN_to_ENU(drone.dsr_x, drone.dsr_y);
     dsr_pose.header.stamp = ros::Time::now();
-    dsr_pose.pose.position.x = enu_pos.x();
-    dsr_pose.pose.position.y = enu_pos.y();
-    dsr_pose.pose.position.z = 4.0;
-    dsr_att.orientation.w = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).w();
-    dsr_att.orientation.x = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).x();
-    dsr_att.orientation.y = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).y();
-    dsr_att.orientation.z = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).z();
+    dsr_pose.position.x = enu_pos.x();
+    dsr_pose.position.y = enu_pos.y();
+    dsr_pose.position.z = 4.0;
+    dsr_pose.yaw = cotf.MSN_to_ENU_YAW(drone.dsr_yaw);
     waypoint_pub.publish(dsr_pose);
-    att_pub.publish(dsr_att);
 
     scheme.dst_id = start_id;
     scheme_pub.publish(scheme);
@@ -506,15 +498,11 @@ int main(int argc, char **argv) {
             // 发布航点
             enu_pos = cotf.MSN_to_ENU(drone.dsr_x, drone.dsr_y);
             dsr_pose.header.stamp = ros::Time::now();
-            dsr_pose.pose.position.x = enu_pos.x();
-            dsr_pose.pose.position.y = enu_pos.y();
-            dsr_pose.pose.position.z = 4.0;
-            dsr_att.orientation.w = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).w();
-            dsr_att.orientation.x = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).x();
-            dsr_att.orientation.y = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).y();
-            dsr_att.orientation.z = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).z();
+            dsr_pose.position.x = enu_pos.x();
+            dsr_pose.position.y = enu_pos.y();
+            dsr_pose.position.z = 4.0;
+            dsr_pose.yaw = cotf.MSN_to_ENU_YAW(drone.dsr_yaw);
             waypoint_pub.publish(dsr_pose);
-            att_pub.publish(dsr_att);
 
             scheme.src_id = drone.cur_node_id;
             scheme.dst_id = drone.next_node();
@@ -665,15 +653,11 @@ int main(int argc, char **argv) {
     // 发布航点
     enu_pos = cotf.MSN_to_ENU(drone.dsr_x, drone.dsr_y);
     dsr_pose.header.stamp = ros::Time::now();
-    dsr_pose.pose.position.x = enu_pos.x();
-    dsr_pose.pose.position.y = enu_pos.y();
-    dsr_pose.pose.position.z = 4.0;
-    dsr_att.orientation.w = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).w();
-    dsr_att.orientation.x = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).x();
-    dsr_att.orientation.y = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).y();
-    dsr_att.orientation.z = tf::Quaternion(cotf.MSN_to_ENU_YAW(drone.dsr_yaw),0,0).z();
+    dsr_pose.position.x = enu_pos.x();
+    dsr_pose.position.y = enu_pos.y();
+    dsr_pose.position.z = 4.0;
+    dsr_pose.yaw = cotf.MSN_to_ENU_YAW(drone.dsr_yaw);
     waypoint_pub.publish(dsr_pose);
-    att_pub.publish(dsr_att);
 
     scheme.src_id = drone.cur_node_id;
     scheme.dst_id = drone.next_node();
