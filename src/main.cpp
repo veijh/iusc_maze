@@ -615,18 +615,19 @@ int main(int argc, char **argv) {
             if(drone.merged_path.empty())
             {
                 cout << "no possible map!!" << endl;
-                drone.set_target_pos(3, maze_template);
-                /* 理想状态 */
-                while(!drone.is_reached())
-                {
-                    drone.cur_x = drone.dsr_x;
-                    drone.cur_y = drone.dsr_y;
-                }
-                drone.cur_node_id = 3;
+                // drone.set_target_pos(3, maze_template);
+                // /* 理想状态 */
+                // while(!drone.is_reached())
+                // {
+                //     drone.cur_x = drone.dsr_x;
+                //     drone.cur_y = drone.dsr_y;
+                // }
+                // drone.cur_node_id = 3;
             }
         }
     }
 
+    cout << "----Flying to Nearest Ending----" << endl;
     // 飞向最近的终点
     min_dis = 999.0;
     int end_id = -1;
@@ -697,7 +698,10 @@ int main(int argc, char **argv) {
     }
     drone.cur_node_id = end_id;
 
+    cout << "----UAV " << (drone.uav_id+1) << "has Reached Ending!!----";
     // 发布节点信息
+    nh.setParam("target", end_id-real_node_num);
 
+    cout << "----Mission 1 Completed----" << endl;
     return 0;
 }
