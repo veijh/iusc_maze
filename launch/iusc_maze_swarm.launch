@@ -8,20 +8,20 @@
 	<!-- 激光安全距离 -->
 	<param name="laser_dist" type="double" value="2.0"/>
 	<!--飞行速度 -->
-	<param name="dsr_vel" type="double" value="1.0"/>
+	<param name="dsr_vel" type="double" value="2.0"/>
 	<!-- 飞行高度 -->
-	<param name="flight_h" type="double" value="4.0"/>
+	<param name="flight_h" type="double" value="2.0"/>
 	<!-- 参考点坐标 -->
 	<rosparam command="load" file="$(find iusc_maze)/cfg/GPS_LALO.yaml"/>
 	<!-- csv文件目录 -->
 	<param name="file_path" type="string" value="$(find iusc_maze)"/>
-
+	<!-- 不能注释，但不用修改 -->
 	<param name="initial_x" type="double" value="-1.0"/>
 	<param name="initial_y" type="double" value="22.5"/>
 	<!-- <param name="uav_id" type="int" value="0"/> -->
 	<node name = "iusc_maze" pkg="iusc_maze" type="iusc_maze_node" output="screen"/>
 	<!-- 坐标转换服务 -->
-	<node pkg="iusc_maze" type="map2local_server" name="map2local_server" output="screen"/>
+	<!-- <node pkg="iusc_maze" type="map2local_server" name="map2local_server" output="screen"/> -->
 
 	<!-- <node name = "uav1" pkg="iusc_maze" type="iusc_maze_node" output="screen">
 		<param name="initial_x" type="double" value="-1.0"/>

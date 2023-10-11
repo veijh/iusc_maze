@@ -352,14 +352,6 @@ int main(int argc, char **argv) {
     // drone位置的初始化
     Drone drone(x0, y0, uav_id);
 
-    scheme.uav_id = uav_id;
-    scheme.src_id = -1;
-    scheme.dst_id = -1;
-
-    swarm.uav_id = uav_id;
-    swarm.x = x0;
-    swarm.y = y0;
-
     // 保存的其他无人机位置信息
     vector<vector<double>> swarm_info(6,vector<double>(2,-1.0));
     // 保存的其他无人机路径信息
@@ -385,6 +377,14 @@ int main(int argc, char **argv) {
         ros::spinOnce();
     }
     cout << "uav " << (drone.uav_id+1) <<  " msn pos init done: (" << drone.cur_x << ", " << drone.cur_y << ")" << endl;
+
+    scheme.uav_id = uav_id;
+    scheme.src_id = -1;
+    scheme.dst_id = -1;
+
+    swarm.uav_id = uav_id;
+    swarm.x = drone.cur_x;
+    swarm.y = drone.cur_y;
 
     // 检测是否进入offboard模式
     cout << "----Waiting for Offboard----" << endl;
