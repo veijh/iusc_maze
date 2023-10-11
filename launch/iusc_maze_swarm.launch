@@ -1,17 +1,21 @@
 <launch>
-	<!--仿真中的地图编号-->
+	<!-- 仿真中的地图编号 -->
 	<param name="sim_map_id" type="int" value="3"/>
-	<!--交汇路口安全距离/-->
+	<!-- 交汇路口安全距离 -->
 	<param name="mtg_dist" type="double" value="2.0"/>
-	<!--前方安全距离/-->
+	<!-- 前方安全距离 -->
 	<param name="flw_dist" type="double" value="1.6"/>
-	<!--激光安全距离/-->
+	<!-- 激光安全距离 -->
 	<param name="laser_dist" type="double" value="2.0"/>
-	<!--飞行速度/-->
+	<!--飞行速度 -->
 	<param name="dsr_vel" type="double" value="1.0"/>
-	<!--参考点坐标-->
+	<!-- 飞行高度 -->
+	<param name="flight_h" type="double" value="4.0"/>
+	<!-- 参考点坐标 -->
 	<rosparam command="load" file="$(find iusc_maze)/cfg/GPS_LALO.yaml"/>
+	<!-- csv文件目录 -->
 	<param name="file_path" type="string" value="$(find iusc_maze)"/>
+
 	<param name="initial_x" type="double" value="-1.0"/>
 	<param name="initial_y" type="double" value="22.5"/>
 	<param name="uav_id" type="int" value="0"/>

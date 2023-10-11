@@ -27,6 +27,7 @@ const double scale = 0.1;
 double mtg_dist = 1.6;
 double flw_dist = 1.6;
 double dsr_vel = 2.0;
+double flight_h = 4.0;
 bool init_done = false;
 bool gps_init_done = false;
 string file_path;
@@ -251,6 +252,7 @@ int main(int argc, char **argv) {
     nh.getParam("mtg_dist", mtg_dist);
     nh.getParam("flw_dist", flw_dist);
     nh.getParam("dsr_vel", dsr_vel);
+    nh.getParam("flight_h", flight_h);
 
     // 规划路径：rviz可视化
     ros::Publisher path_pub = nh.advertise<nav_msgs::Path>("planned_path", 1, true);
@@ -421,7 +423,7 @@ int main(int argc, char **argv) {
     dsr_pose.header.stamp = ros::Time::now();
     dsr_pose.position.x = enu_pos.x();
     dsr_pose.position.y = enu_pos.y();
-    dsr_pose.position.z = 4.0;
+    dsr_pose.position.z = flight_h;
     dsr_pose.yaw = cotf.MSN_to_ENU_YAW(drone.dsr_yaw);
     waypoint_pub.publish(dsr_pose);
 
@@ -431,6 +433,11 @@ int main(int argc, char **argv) {
     /* 理想状态 */
     while(!drone.is_reached())
     {
+        // 仿真中的动力学，实际应当被注释
+        // drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+        // drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+    
+        dsr_pose.header.stamp = ros::Time::now();
         waypoint_pub.publish(dsr_pose);
         // 更新无人机状态信息
         // 需要补充一个回调函数，更新cur_x，cur_y
@@ -454,10 +461,6 @@ int main(int argc, char **argv) {
             // 运动
             drone.dsr_vel = dsr_vel;
         }
-        
-        // 仿真中的动力学，实际应当被注释
-        // drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
-        // drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
         
         // 这里发布速度信息给控制器
 
@@ -503,7 +506,7 @@ int main(int argc, char **argv) {
             dsr_pose.header.stamp = ros::Time::now();
             dsr_pose.position.x = enu_pos.x();
             dsr_pose.position.y = enu_pos.y();
-            dsr_pose.position.z = 4.0;
+            dsr_pose.position.z = flight_h;
             dsr_pose.yaw = cotf.MSN_to_ENU_YAW(drone.dsr_yaw);
             waypoint_pub.publish(dsr_pose);
 
@@ -513,8 +516,13 @@ int main(int argc, char **argv) {
 
             while(!drone.is_reached())
             {
+                // 仿真中的动力学，实际应当被注释
+                // drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+                // drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+
                 // 更新无人机状态信息
                 // 需要补充一个回调函数，更新cur_x，cur_y
+                dsr_pose.header.stamp = ros::Time::now();
                 waypoint_pub.publish(dsr_pose);
                 
                 swarm.x = drone.cur_x;
@@ -551,10 +559,6 @@ int main(int argc, char **argv) {
                     // 运动
                     drone.dsr_vel = dsr_vel;
                 }
-                
-                // 仿真中的动力学，实际应当被注释
-                // drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
-                // drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
                 
                 // 这里发布速度信息给控制器
 
@@ -660,7 +664,7 @@ int main(int argc, char **argv) {
     dsr_pose.header.stamp = ros::Time::now();
     dsr_pose.position.x = enu_pos.x();
     dsr_pose.position.y = enu_pos.y();
-    dsr_pose.position.z = 4.0;
+    dsr_pose.position.z = flight_h;
     dsr_pose.yaw = cotf.MSN_to_ENU_YAW(drone.dsr_yaw);
     waypoint_pub.publish(dsr_pose);
 
@@ -671,6 +675,11 @@ int main(int argc, char **argv) {
     /* 理想状态 */
     while(!drone.is_reached())
     {
+        // 仿真中的动力学
+        // drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+        // drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+
+        dsr_pose.header.stamp = ros::Time::now();
         waypoint_pub.publish(dsr_pose);
         swarm.x = drone.cur_x;
         swarm.y = drone.cur_y;
@@ -681,10 +690,6 @@ int main(int argc, char **argv) {
 
         // 飞向终点没有避碰协调
         drone.dsr_vel = dsr_vel;
-        
-        // 仿真中的动力学
-        // drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
-        // drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
 
         // 发布位置用于可视化
         drone_pose.header.stamp = ros::Time::now();
@@ -704,7 +709,7 @@ int main(int argc, char **argv) {
     }
     drone.cur_node_id = end_id;
 
-    cout << "----UAV " << (drone.uav_id+1) << "has Reached Ending!!----";
+    cout << "----UAV " << (drone.uav_id+1) << "has Reached Ending!!----" << endl << endl;
     // 发布节点信息
     nh.setParam("target", end_id-real_node_num);
 
