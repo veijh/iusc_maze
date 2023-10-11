@@ -437,7 +437,7 @@ int main(int argc, char **argv) {
     traj_num = 0;
     vector_traj.clear();
     inter_point = Eigen::Vector2d(drone.cur_x, drone.cur_y);
-    while(norm2d(inter_point(0), inter_point(0), drone.dsr_x, drone.dsr_y) > dis_th)
+    while(norm2d(inter_point(0), inter_point(1), drone.dsr_x, drone.dsr_y) > dis_th)
     {
         inter_point(0) = inter_point(0) + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
         inter_point(1) = inter_point(1) + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
@@ -551,7 +551,7 @@ int main(int argc, char **argv) {
             traj_num = 0;
             vector_traj.clear();
             inter_point = Eigen::Vector2d(drone.cur_x, drone.cur_y);
-            while(norm2d(inter_point(0), inter_point(0), drone.dsr_x, drone.dsr_y) > dis_th)
+            while(norm2d(inter_point(0), inter_point(1), drone.dsr_x, drone.dsr_y) > dis_th)
             {
                 inter_point(0) = inter_point(0) + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
                 inter_point(1) = inter_point(1) + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
@@ -739,7 +739,7 @@ int main(int argc, char **argv) {
     traj_num = 0;
     vector_traj.clear();
     inter_point = Eigen::Vector2d(drone.cur_x, drone.cur_y);
-    while(norm2d(inter_point(0), inter_point(0), drone.dsr_x, drone.dsr_y) > dis_th)
+    while(norm2d(inter_point(0), inter_point(1), drone.dsr_x, drone.dsr_y) > dis_th)
     {
         inter_point(0) = inter_point(0) + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
         inter_point(1) = inter_point(1) + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
