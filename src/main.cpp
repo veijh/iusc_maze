@@ -425,6 +425,7 @@ int main(int argc, char **argv) {
     dsr_pose.position.y = enu_pos.y();
     dsr_pose.position.z = flight_h;
     dsr_pose.yaw = cotf.MSN_to_ENU_YAW(drone.dsr_yaw);
+    waypoint_pub.publish(dsr_pose);
 
     scheme.dst_id = start_id;
     scheme_pub.publish(scheme);
@@ -545,6 +546,7 @@ int main(int argc, char **argv) {
             dsr_pose.position.y = enu_pos.y();
             dsr_pose.position.z = flight_h;
             dsr_pose.yaw = cotf.MSN_to_ENU_YAW(drone.dsr_yaw);
+            waypoint_pub.publish(dsr_pose);
 
             scheme.src_id = drone.cur_node_id;
             scheme.dst_id = drone.next_node();
@@ -734,6 +736,7 @@ int main(int argc, char **argv) {
     dsr_pose.position.y = enu_pos.y();
     dsr_pose.position.z = flight_h;
     dsr_pose.yaw = cotf.MSN_to_ENU_YAW(drone.dsr_yaw);
+    waypoint_pub.publish(dsr_pose);
 
     scheme.src_id = drone.cur_node_id;
     scheme.dst_id = drone.next_node();
