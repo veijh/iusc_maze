@@ -439,14 +439,15 @@ int main(int argc, char **argv) {
     inter_point = Eigen::Vector2d(drone.cur_x, drone.cur_y);
     while(norm2d(inter_point(0), inter_point(1), drone.dsr_x, drone.dsr_y) > dis_th)
     {
-        inter_point(0) = inter_point(0) + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
-        inter_point(1) = inter_point(1) + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+        inter_point(0) = inter_point(0) + dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+        inter_point(1) = inter_point(1) + dsr_vel*sin(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
         vector_traj.push_back(inter_point);
     }
     inter_point(0) = drone.dsr_x;
     inter_point(1) = drone.dsr_y;
     vector_traj.push_back(inter_point);
     traj_num = vector_traj.size();
+    cout << "traj_num = " << traj_num << endl;
     traj_cur_id = 0;
 
     /* 理想状态 */
@@ -486,7 +487,8 @@ int main(int argc, char **argv) {
             enu_pos = cotf.MSN_to_ENU(vector_traj.at(traj_cur_id));
             dsr_pose.position.x = enu_pos.x();
             dsr_pose.position.y = enu_pos.y();
-            if(traj_cur_id > traj_num-1)
+            cout << " " << traj_cur_id << "/" << traj_num-1;
+            if(traj_cur_id >= traj_num-1)
             {
                 traj_cur_id = traj_num-1;
             }
@@ -553,8 +555,8 @@ int main(int argc, char **argv) {
             inter_point = Eigen::Vector2d(drone.cur_x, drone.cur_y);
             while(norm2d(inter_point(0), inter_point(1), drone.dsr_x, drone.dsr_y) > dis_th)
             {
-                inter_point(0) = inter_point(0) + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
-                inter_point(1) = inter_point(1) + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+                inter_point(0) = inter_point(0) + dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+                inter_point(1) = inter_point(1) + dsr_vel*sin(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
                 vector_traj.push_back(inter_point);
             }
             inter_point(0) = drone.dsr_x;
@@ -614,7 +616,8 @@ int main(int argc, char **argv) {
                     enu_pos = cotf.MSN_to_ENU(vector_traj.at(traj_cur_id));
                     dsr_pose.position.x = enu_pos.x();
                     dsr_pose.position.y = enu_pos.y();
-                    if(traj_cur_id > traj_num-1)
+                    cout << " " << traj_cur_id << "/" << traj_num-1;
+                    if(traj_cur_id >= traj_num-1)
                     {
                         traj_cur_id = traj_num-1;
                     }
@@ -741,8 +744,8 @@ int main(int argc, char **argv) {
     inter_point = Eigen::Vector2d(drone.cur_x, drone.cur_y);
     while(norm2d(inter_point(0), inter_point(1), drone.dsr_x, drone.dsr_y) > dis_th)
     {
-        inter_point(0) = inter_point(0) + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
-        inter_point(1) = inter_point(1) + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+        inter_point(0) = inter_point(0) + dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+        inter_point(1) = inter_point(1) + dsr_vel*sin(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
         vector_traj.push_back(inter_point);
     }
     inter_point(0) = drone.dsr_x;
@@ -773,7 +776,8 @@ int main(int argc, char **argv) {
         enu_pos = cotf.MSN_to_ENU(vector_traj.at(traj_cur_id));
         dsr_pose.position.x = enu_pos.x();
         dsr_pose.position.y = enu_pos.y();
-        if(traj_cur_id > traj_num-1)
+        cout << " " << traj_cur_id << "/" << traj_num-1;
+        if(traj_cur_id >= traj_num-1)
         {
             traj_cur_id = traj_num-1;
         }
