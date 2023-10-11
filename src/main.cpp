@@ -425,10 +425,29 @@ int main(int argc, char **argv) {
     dsr_pose.position.y = enu_pos.y();
     dsr_pose.position.z = flight_h;
     dsr_pose.yaw = cotf.MSN_to_ENU_YAW(drone.dsr_yaw);
-    waypoint_pub.publish(dsr_pose);
 
     scheme.dst_id = start_id;
     scheme_pub.publish(scheme);
+
+    // 插值轨迹数量
+    int traj_num = 0, traj_cur_id = 0;
+    vector<Eigen::Vector2d> vector_traj;
+    Eigen::Vector2d inter_point(0.0, 0.0);
+
+    traj_num = 0;
+    vector_traj.clear();
+    inter_point = Eigen::Vector2d(drone.cur_x, drone.cur_y);
+    while(norm2d(inter_point(0), inter_point(0), drone.dsr_x, drone.dsr_y) > dis_th)
+    {
+        inter_point(0) = inter_point(0) + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+        inter_point(1) = inter_point(1) + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+        vector_traj.push_back(inter_point);
+    }
+    inter_point(0) = drone.dsr_x;
+    inter_point(1) = drone.dsr_y;
+    vector_traj.push_back(inter_point);
+    traj_num = vector_traj.size();
+    traj_cur_id = 0;
 
     /* 理想状态 */
     while(!drone.is_reached())
@@ -437,8 +456,6 @@ int main(int argc, char **argv) {
         // drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
         // drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
     
-        dsr_pose.header.stamp = ros::Time::now();
-        waypoint_pub.publish(dsr_pose);
         // 更新无人机状态信息
         // 需要补充一个回调函数，更新cur_x，cur_y
 
@@ -455,11 +472,29 @@ int main(int argc, char **argv) {
         {
             // 悬停
             drone.dsr_vel = 0;
+            dsr_pose.header.stamp = ros::Time::now();
+            enu_pos = cotf.MSN_to_ENU(drone.cur_x, drone.cur_y);
+            dsr_pose.position.x = enu_pos.x();
+            dsr_pose.position.y = enu_pos.y();
+            waypoint_pub.publish(dsr_pose);
         }
         else
         {
             // 运动
             drone.dsr_vel = dsr_vel;
+            dsr_pose.header.stamp = ros::Time::now();
+            enu_pos = cotf.MSN_to_ENU(vector_traj.at(traj_cur_id));
+            dsr_pose.position.x = enu_pos.x();
+            dsr_pose.position.y = enu_pos.y();
+            if(traj_cur_id > traj_num-1)
+            {
+                traj_cur_id = traj_num-1;
+            }
+            else
+            {
+                traj_cur_id++;
+            }
+            waypoint_pub.publish(dsr_pose);
         }
         
         // 这里发布速度信息给控制器
@@ -508,11 +543,25 @@ int main(int argc, char **argv) {
             dsr_pose.position.y = enu_pos.y();
             dsr_pose.position.z = flight_h;
             dsr_pose.yaw = cotf.MSN_to_ENU_YAW(drone.dsr_yaw);
-            waypoint_pub.publish(dsr_pose);
 
             scheme.src_id = drone.cur_node_id;
             scheme.dst_id = drone.next_node();
             scheme_pub.publish(scheme);
+
+            traj_num = 0;
+            vector_traj.clear();
+            inter_point = Eigen::Vector2d(drone.cur_x, drone.cur_y);
+            while(norm2d(inter_point(0), inter_point(0), drone.dsr_x, drone.dsr_y) > dis_th)
+            {
+                inter_point(0) = inter_point(0) + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+                inter_point(1) = inter_point(1) + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+                vector_traj.push_back(inter_point);
+            }
+            inter_point(0) = drone.dsr_x;
+            inter_point(1) = drone.dsr_y;
+            vector_traj.push_back(inter_point);
+            traj_num = vector_traj.size();
+            traj_cur_id = 0;
 
             while(!drone.is_reached())
             {
@@ -522,8 +571,6 @@ int main(int argc, char **argv) {
 
                 // 更新无人机状态信息
                 // 需要补充一个回调函数，更新cur_x，cur_y
-                dsr_pose.header.stamp = ros::Time::now();
-                waypoint_pub.publish(dsr_pose);
                 
                 swarm.x = drone.cur_x;
                 swarm.y = drone.cur_y;
@@ -553,11 +600,29 @@ int main(int argc, char **argv) {
                 {
                     // 悬停
                     drone.dsr_vel = 0;
+                    dsr_pose.header.stamp = ros::Time::now();
+                    enu_pos = cotf.MSN_to_ENU(drone.cur_x, drone.cur_y);
+                    dsr_pose.position.x = enu_pos.x();
+                    dsr_pose.position.y = enu_pos.y();
+                    waypoint_pub.publish(dsr_pose);
                 }
                 else
                 {
                     // 运动
                     drone.dsr_vel = dsr_vel;
+                    dsr_pose.header.stamp = ros::Time::now();
+                    enu_pos = cotf.MSN_to_ENU(vector_traj.at(traj_cur_id));
+                    dsr_pose.position.x = enu_pos.x();
+                    dsr_pose.position.y = enu_pos.y();
+                    if(traj_cur_id > traj_num-1)
+                    {
+                        traj_cur_id = traj_num-1;
+                    }
+                    else
+                    {
+                        traj_cur_id++;
+                    }
+                    waypoint_pub.publish(dsr_pose);
                 }
                 
                 // 这里发布速度信息给控制器
@@ -666,11 +731,25 @@ int main(int argc, char **argv) {
     dsr_pose.position.y = enu_pos.y();
     dsr_pose.position.z = flight_h;
     dsr_pose.yaw = cotf.MSN_to_ENU_YAW(drone.dsr_yaw);
-    waypoint_pub.publish(dsr_pose);
 
     scheme.src_id = drone.cur_node_id;
     scheme.dst_id = drone.next_node();
     scheme_pub.publish(scheme);
+
+    traj_num = 0;
+    vector_traj.clear();
+    inter_point = Eigen::Vector2d(drone.cur_x, drone.cur_y);
+    while(norm2d(inter_point(0), inter_point(0), drone.dsr_x, drone.dsr_y) > dis_th)
+    {
+        inter_point(0) = inter_point(0) + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+        inter_point(1) = inter_point(1) + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
+        vector_traj.push_back(inter_point);
+    }
+    inter_point(0) = drone.dsr_x;
+    inter_point(1) = drone.dsr_y;
+    vector_traj.push_back(inter_point);
+    traj_num = vector_traj.size();
+    traj_cur_id = 0;
 
     /* 理想状态 */
     while(!drone.is_reached())
@@ -679,8 +758,6 @@ int main(int argc, char **argv) {
         // drone.cur_x = drone.cur_x + drone.dsr_vel*cos(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
         // drone.cur_y = drone.cur_y + drone.dsr_vel*sin(drone.dsr_yaw)*loop_rate.expectedCycleTime().toSec();
 
-        dsr_pose.header.stamp = ros::Time::now();
-        waypoint_pub.publish(dsr_pose);
         swarm.x = drone.cur_x;
         swarm.y = drone.cur_y;
         swarm_pub.publish(swarm);
@@ -690,6 +767,21 @@ int main(int argc, char **argv) {
 
         // 飞向终点没有避碰协调
         drone.dsr_vel = dsr_vel;
+
+        drone.dsr_vel = dsr_vel;
+        dsr_pose.header.stamp = ros::Time::now();
+        enu_pos = cotf.MSN_to_ENU(vector_traj.at(traj_cur_id));
+        dsr_pose.position.x = enu_pos.x();
+        dsr_pose.position.y = enu_pos.y();
+        if(traj_cur_id > traj_num-1)
+        {
+            traj_cur_id = traj_num-1;
+        }
+        else
+        {
+            traj_cur_id++;
+        }
+        waypoint_pub.publish(dsr_pose);
 
         // 发布位置用于可视化
         drone_pose.header.stamp = ros::Time::now();
