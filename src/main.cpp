@@ -16,9 +16,9 @@
 #include <boost/bind.hpp>
 
 using namespace std;
-const int real_node_num = 84;
-const double offset_x = 0.0-284.3;
-const double offset_y = 242.5-400.34;
+const int real_node_num = 83;
+const double offset_x = 0.0-181.76;
+const double offset_y = 0.0-44.74;
 const double scale = 0.1;
 double mtg_dist = 1.6;
 double flw_dist = 1.6;
