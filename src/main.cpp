@@ -18,6 +18,7 @@
 #include "GPS_CoTF.h"
 #include <mavros_msgs/State.h>
 #include <mavros_msgs/PositionTarget.h>
+#include <std_msgs/Float64.h>
 
 using namespace std;
 const int real_node_num = 84;
@@ -202,6 +203,11 @@ void px4_callback(const mavros_msgs::State::ConstPtr& msg){
     current_state = *msg;
 }
 
+// 订阅测距模块
+void tof_callback(const std_msgs::Float64::ConstPtr& msg, double *tof_dist){
+    *tof_dist = msg->data;
+}
+
 // 多机协调
 int coordinate(Drone &drone, const vector<vector<int>> &swarm_scheme, const vector<vector<double>> &swarm_info, Map &maze_template)
 {
@@ -241,6 +247,28 @@ int coordinate(Drone &drone, const vector<vector<int>> &swarm_scheme, const vect
         }
     }
     return hold;
+}
+
+int is_next_node_reachable(double &tof_dist, int &cur_id, int &dst_id, Map &maze)
+{
+    double th = 0.0;
+    for(auto edge:maze.node.at(cur_id).node_edge)
+    {
+        if(edge.dst_id == dst_id)
+        {
+            th = edge.distance;
+            break;
+        }
+    }
+    // 判断前方距离大于当前位置到下一个航点的距离，可以通信，返回1
+    if(tof_dist > th)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 int main(int argc, char **argv) {
@@ -362,12 +390,15 @@ int main(int argc, char **argv) {
     vector<int> is_occupied(6, 0);
     // mavros无人机位置信息
     double enu_x = 0.0, enu_y = 0.0;
+    // tof_测距
+    double tof_dist = 999.0;
 
     ros::Subscriber scheme_sub = nh.subscribe<iusc_maze::Scheme>("/scheme", 50, boost::bind(&scheme_callback, _1, &swarm_scheme));
     ros::Subscriber swarm_sub = nh.subscribe<iusc_maze::Swarm>("/swarm", 50, boost::bind(&swarm_callback, _1, &swarm_info));
     ros::Subscriber dst_sub = nh.subscribe<iusc_maze::Dst>("/dst", 10, boost::bind(&dst_callback, _1, &is_occupied));
     ros::Subscriber deny_sub = nh.subscribe<iusc_maze::Deny>("/deny", 10, boost::bind(&deny_callback, _1, &maze_vector, &replan));
     ros::Subscriber pos_sub = nh.subscribe<geometry_msgs::PoseStamped>("mavros/local_position/pose", 1, boost::bind(&pos_callback, _1, &drone, &cotf));
+    ros::Subscriber tof_sub = nh.subscribe<std_msgs::Float64>("tof", 1, boost::bind(&tof_callback, _1, &tof_dist));
 
     cout << "----Reading initial local position----" << endl;
     // 更新初始位姿信息
@@ -533,7 +564,26 @@ int main(int argc, char **argv) {
     {
         // 调整航向角判断下一节点是否可达
 
+        // 更新无人机当前位置
+        ros::spinOnce();
+        double dsr_x = maze_template.node.at(drone.next_node()).x;
+        double dsr_y = maze_template.node.at(drone.next_node()).y;
+        double dsr_yaw = atan2(dsr_y-drone.cur_y, dsr_x-drone.cur_x);
 
+        enu_pos = cotf.MSN_to_ENU(drone.cur_x, drone.cur_y);
+        dsr_pose.header.stamp = ros::Time::now();
+        dsr_pose.position.x = enu_pos.x();
+        dsr_pose.position.y = enu_pos.y();
+        dsr_pose.position.z = flight_h;
+        dsr_pose.yaw = cotf.MSN_to_ENU_YAW(dsr_yaw);
+        waypoint_pub.publish(dsr_pose);
+
+        // 等待偏航角调整
+        ros::Duration(1.0).sleep();
+
+        // 更新距离传感器
+        ros::spinOnce();
+        
         // 判断下一节点是否可达
         if(drone.is_next_node_reachable(maze_vector.at(sim_map_id)))
         {
@@ -701,6 +751,7 @@ int main(int argc, char **argv) {
                 //     drone.cur_y = drone.dsr_y;
                 // }
                 // drone.cur_node_id = 3;
+                return 0;
             }
         }
     }
