@@ -8,9 +8,9 @@
 	<!-- 激光安全距离 -->
 	<param name="laser_dist" type="double" value="2.0"/>
 	<!--飞行速度 -->
-	<param name="dsr_vel" type="double" value="2.0"/>
+	<param name="dsr_vel" type="double" value="1.0"/>
 	<!-- 飞行高度 -->
-	<param name="flight_h" type="double" value="2.0"/>
+	<param name="flight_h" type="double" value="1.5"/>
 	<!-- 参考点坐标 -->
 	<rosparam command="load" file="$(find iusc_maze)/cfg/GPS_LALO.yaml"/>
 	<!-- csv文件目录 -->
